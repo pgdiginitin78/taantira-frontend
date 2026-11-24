@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import api, { setAuthToken, getAuthToken } from '../services/api';
 import { disconnectSocket } from '../services/socket';
+import { useCartStore } from './useCartStore';
+import { useWishlistStore } from './useWishlistStore';
 
 export const useAuthStore = create((set) => ({
   user: null,
@@ -12,16 +14,22 @@ export const useAuthStore = create((set) => ({
     const token = getAuthToken();
     if (!token) {
       set({ user: null, isAuthenticated: false, initialized: true });
+      useCartStore.getState().fetchCart();
+      useWishlistStore.getState().fetchWishlist();
       return null;
     }
     try {
       const res = await api.get('/auth/me');
       const user = res.data?.data?.user || null;
       set({ user, isAuthenticated: Boolean(user), initialized: true });
+      useCartStore.getState().fetchCart();
+      useWishlistStore.getState().fetchWishlist();
       return user;
     } catch {
       setAuthToken(null);
       set({ user: null, isAuthenticated: false, initialized: true });
+      useCartStore.getState().fetchCart();
+      useWishlistStore.getState().fetchWishlist();
       return null;
     }
   },
@@ -33,6 +41,10 @@ export const useAuthStore = create((set) => ({
       const { accessToken, user } = res.data.data;
       setAuthToken(accessToken);
       set({ user, isAuthenticated: true, loading: false, initialized: true });
+      await Promise.all([
+        useCartStore.getState().syncGuestCartToServer(),
+        useWishlistStore.getState().syncGuestWishlistToServer(),
+      ]);
       return user;
     } catch (err) {
       set({ loading: false });
@@ -47,6 +59,10 @@ export const useAuthStore = create((set) => ({
       const { accessToken, user } = res.data.data;
       setAuthToken(accessToken);
       set({ user, isAuthenticated: true, loading: false, initialized: true });
+      await Promise.all([
+        useCartStore.getState().syncGuestCartToServer(),
+        useWishlistStore.getState().syncGuestWishlistToServer(),
+      ]);
       return user;
     } catch (err) {
       set({ loading: false });
@@ -63,5 +79,7 @@ export const useAuthStore = create((set) => ({
     setAuthToken(null);
     disconnectSocket();
     set({ user: null, isAuthenticated: false });
+    useCartStore.getState().fetchCart();
+    useWishlistStore.getState().fetchWishlist();
   },
 }));

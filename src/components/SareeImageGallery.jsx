@@ -6,9 +6,10 @@ import {
   ChevronRight,
   Heart,
   Maximize2,
+  Move,
   RotateCcw,
-  Search,
   Share2,
+  Sparkles,
   X,
   ZoomIn,
   ZoomOut,
@@ -16,6 +17,12 @@ import {
 import { buildGalleryAngles } from '../utils/fallbackCatalog';
 
 const ZOOM_STEPS = [1, 1.5, 2, 2.5, 3];
+const ZOOM_PRESETS = [
+  { scale: 1, label: '1×' },
+  { scale: 1.5, label: '1.5×' },
+  { scale: 2, label: '2×' },
+  { scale: 3, label: '3×' },
+];
 
 export default function SareeImageGallery({
   product,
@@ -58,6 +65,17 @@ export default function SareeImageGallery({
     [angles.length]
   );
 
+  const setZoomPreset = useCallback(
+    (scale) => {
+      if (!hasImage) return;
+      setZoom(scale);
+      if (scale <= 1) {
+        setPan({ x: 0.5, y: 0.5 });
+      }
+    },
+    [hasImage]
+  );
+
   const handleZoomIn = useCallback(() => {
     if (!hasImage) return;
     setZoom((prev) => {
@@ -81,17 +99,6 @@ export default function SareeImageGallery({
     setHoverPoint(null);
   }, []);
 
-  const handleToggleZoom = useCallback(() => {
-    if (!hasImage) return;
-    setZoom((prev) => {
-      if (prev > 1) {
-        setPan({ x: 0.5, y: 0.5 });
-        return 1;
-      }
-      return 2;
-    });
-  }, [hasImage]);
-
   useEffect(() => {
     if (!fullscreenOpen) return undefined;
     const onKeyDown = (e) => {
@@ -111,7 +118,6 @@ export default function SareeImageGallery({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [fullscreenOpen, activeIndex, selectAngle, handleZoomIn, handleZoomOut]);
 
-  // Draw hover magnifier loupe into canvas
   useEffect(() => {
     const canvas = loupeCanvasRef.current;
     const img = imgRef.current;
@@ -121,7 +127,7 @@ export default function SareeImageGallery({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const magnifierScale = 2.8;
+    const magnifierScale = 3.2;
     const cropWidth = img.naturalWidth / magnifierScale;
     const cropHeight = img.naturalHeight / magnifierScale;
     const centerX = hoverPoint.x * img.naturalWidth;
@@ -246,7 +252,6 @@ export default function SareeImageGallery({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col-reverse gap-3 sm:flex-row">
-        {/* Desktop Vertical 5-Angle Thumbnail Column + Down Chevron */}
         <div className="flex flex-row items-center gap-2 overflow-x-auto pb-1 sm:w-16 sm:flex-col sm:overflow-visible sm:pb-0 lg:w-20">
           {angles.map((angle, idx) => {
             const isSelected = idx === activeIndex;
@@ -292,7 +297,6 @@ export default function SareeImageGallery({
           </button>
         </div>
 
-        {/* Main 3:4 Portrait Viewer matching reference icon & button overlays */}
         <div className="relative flex-1">
           <div
             data-testid="gallery-main-stage"
@@ -306,9 +310,9 @@ export default function SareeImageGallery({
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             onClick={handleViewerClick}
-            className={`relative aspect-[3/4] w-full select-none overflow-hidden rounded-2xl border border-[#D9A0A9]/45 bg-[#FFF9F2] shadow-sm ${
-              hasImage && zoom > 1 ? 'cursor-grab active:cursor-grabbing' : hasImage ? 'cursor-zoom-in' : ''
-            }`}
+            className={`relative aspect-[3/4] w-full select-none overflow-hidden rounded-2xl border border-[#D9A0A9]/45 bg-[#FFF9F2] shadow-sm transition-shadow duration-300 ${
+              zoom > 1 ? 'ring-2 ring-[#C39A52]/60 shadow-lg' : ''
+            } ${hasImage && zoom > 1 ? 'cursor-grab active:cursor-grabbing' : hasImage ? 'cursor-zoom-in' : ''}`}
           >
             {hasImage ? (
               <>
@@ -322,7 +326,9 @@ export default function SareeImageGallery({
                       [activeAngle.image_url]: true,
                     }))
                   }
-                  className={`h-full w-full object-cover object-top ${zoom > 1 ? 'hidden' : 'block'}`}
+                  className={`h-full w-full object-cover object-top transition-transform duration-300 ${
+                    zoom > 1 ? 'hidden' : 'block'
+                  }`}
                 />
                 {zoom > 1 && (
                   <canvas
@@ -366,7 +372,37 @@ export default function SareeImageGallery({
               </div>
             )}
 
-            {/* Top-Right Vertical Icon Stack (Heart, Share, Expand) matching Image 1 */}
+            <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-[#220713]/75 px-3 py-1 text-[11px] font-medium text-[#FFF9F2] backdrop-blur-md">
+              <span>{activeIndex + 1} / {angles.length}</span>
+              <span className="text-[#C39A52]">·</span>
+              <span className="max-w-36 truncate">{activeAngle?.label}</span>
+            </div>
+
+            {hasImage && zoom > 1 && (
+              <div
+                data-testid="zoom-hud-banner"
+                onClick={(e) => e.stopPropagation()}
+                className="absolute left-1/2 top-12 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-[#C39A52]/60 bg-[#220713]/85 px-3.5 py-1.5 text-[11px] font-semibold text-[#FFF9F2] shadow-xl backdrop-blur-md"
+              >
+                <Move className="h-3.5 w-3.5 text-[#C39A52]" />
+                <span className="whitespace-nowrap">Drag to inspect weave · {Math.round(zoom * 100)}%</span>
+                <button
+                  type="button"
+                  onClick={handleResetZoom}
+                  className="rounded-full bg-[#C39A52] px-2 py-0.5 text-[10px] font-bold text-[#3D1023] hover:bg-[#FFF9F2]"
+                >
+                  Reset
+                </button>
+              </div>
+            )}
+
+            {hasImage && zoom === 1 && !hoverPoint && (
+              <div className="pointer-events-none absolute right-14 top-3 hidden items-center gap-1 rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-semibold text-[#641B32] shadow-sm backdrop-blur-md lg:inline-flex">
+                <Sparkles className="h-3 w-3 text-[#C39A52]" />
+                Hover to inspect zari
+              </div>
+            )}
+
             <div
               onClick={(e) => e.stopPropagation()}
               className="absolute right-3 top-3 flex flex-col gap-2"
@@ -375,14 +411,14 @@ export default function SareeImageGallery({
                 <button
                   type="button"
                   onClick={onToggleWishlist}
-                  aria-label="Save to wishlist"
-                  className={`flex h-9 w-9 items-center justify-center rounded-full border shadow-md transition ${
+                  aria-label={wishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
+                  className={`flex h-9 w-9 items-center justify-center rounded-full border shadow-md backdrop-blur-md transition ${
                     wishlisted
-                      ? 'border-[#641B32] bg-[#641B32] text-[#FFF9F2]'
-                      : 'border-[#D9A0A9]/50 bg-white/95 text-[#3D1023] hover:bg-[#F5E7E8]'
+                      ? 'border-[#641B32] bg-[#641B32] text-[#FFF9F2] ring-2 ring-[#C39A52]/60'
+                      : 'border-[#D9A0A9]/50 bg-white/90 text-[#3D1023] hover:bg-[#F5E7E8]'
                   }`}
                 >
-                  <Heart className="h-4 w-4" />
+                  <Heart className={`h-4 w-4 ${wishlisted ? 'fill-current' : ''}`} />
                 </button>
               )}
               {onShare && (
@@ -390,7 +426,7 @@ export default function SareeImageGallery({
                   type="button"
                   onClick={onShare}
                   aria-label="Share saree link"
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9A0A9]/50 bg-white/95 text-[#3D1023] shadow-md transition hover:bg-[#F5E7E8]"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9A0A9]/50 bg-white/90 text-[#3D1023] shadow-md backdrop-blur-md transition hover:bg-[#F5E7E8]"
                 >
                   <Share2 className="h-4 w-4" />
                 </button>
@@ -399,13 +435,12 @@ export default function SareeImageGallery({
                 type="button"
                 onClick={() => setFullscreenOpen(true)}
                 aria-label="Open fullscreen gallery"
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9A0A9]/50 bg-white/95 text-[#3D1023] shadow-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9A0A9]/50 bg-white/90 text-[#3D1023] shadow-md backdrop-blur-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
               >
                 <Maximize2 className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Left / Right Circular Navigation Arrows */}
             <button
               type="button"
               onClick={(e) => {
@@ -413,7 +448,7 @@ export default function SareeImageGallery({
                 selectAngle(activeIndex - 1);
               }}
               aria-label="Previous angle"
-              className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#3D1023] shadow-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
+              className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#3D1023] shadow-md backdrop-blur-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -424,61 +459,84 @@ export default function SareeImageGallery({
                 selectAngle(activeIndex + 1);
               }}
               aria-label="Next angle"
-              className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#3D1023] shadow-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
+              className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#3D1023] shadow-md backdrop-blur-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
 
-            {/* Bottom-Left Translucent Counter Pill (e.g. "1 / 5") matching Image 1 */}
-            <div className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-[#220713]/75 px-3 py-1 text-xs font-medium text-[#FFF9F2]">
-              {activeIndex + 1} / {angles.length}
-              {zoom > 1 ? ` · ${Math.round(zoom * 100)}%` : ''}
-            </div>
-
-            {/* Bottom-Right Vertical Zoom Stack (+, -, Search Toggle) matching Image 1 */}
             {hasImage && (
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute bottom-3 right-3 flex flex-col gap-2"
+                data-testid="zoom-studio-dock"
+                className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-full border border-[#C39A52]/50 bg-[#220713]/85 px-2 py-1 text-[#FFF9F2] shadow-2xl backdrop-blur-xl"
               >
-                <button
-                  type="button"
-                  onClick={handleZoomIn}
-                  disabled={zoom >= 3}
-                  aria-label="Zoom in"
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9A0A9]/50 bg-white/95 text-[#3D1023] shadow-md transition hover:bg-[#F5E7E8] disabled:opacity-40"
-                >
-                  <ZoomIn className="h-4 w-4" />
-                </button>
                 <button
                   type="button"
                   onClick={handleZoomOut}
                   disabled={zoom <= 1}
                   aria-label="Zoom out"
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9A0A9]/50 bg-white/95 text-[#3D1023] shadow-md transition hover:bg-[#F5E7E8] disabled:opacity-40"
+                  className="flex h-7 w-7 items-center justify-center rounded-full transition hover:bg-white/15 disabled:opacity-35"
                 >
-                  <ZoomOut className="h-4 w-4" />
+                  <ZoomOut className="h-3.5 w-3.5" />
                 </button>
+
+                <div className="flex items-center gap-0.5 rounded-full bg-white/10 p-0.5">
+                  {ZOOM_PRESETS.map((preset) => {
+                    const active = Math.abs(zoom - preset.scale) < 0.05;
+                    return (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => setZoomPreset(preset.scale)}
+                        data-testid={`zoom-preset-${preset.label}`}
+                        className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
+                          active
+                            ? 'bg-[#C39A52] text-[#3D1023] shadow-sm'
+                            : 'text-[#FFF9F2]/80 hover:bg-white/15 hover:text-white'
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <button
                   type="button"
-                  onClick={zoom > 1 ? handleResetZoom : handleToggleZoom}
-                  aria-label={zoom > 1 ? 'Reset zoom' : 'Magnify weave detail'}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9A0A9]/50 bg-white/95 text-[#3D1023] shadow-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
+                  onClick={handleZoomIn}
+                  disabled={zoom >= 3}
+                  aria-label="Zoom in"
+                  className="flex h-7 w-7 items-center justify-center rounded-full transition hover:bg-white/15 disabled:opacity-35"
                 >
-                  {zoom > 1 ? <RotateCcw className="h-4 w-4" /> : <Search className="h-4 w-4" />}
+                  <ZoomIn className="h-3.5 w-3.5" />
                 </button>
+
+                {zoom > 1 && (
+                  <button
+                    type="button"
+                    onClick={handleResetZoom}
+                    aria-label="Reset zoom"
+                    className="flex h-7 w-7 items-center justify-center rounded-full border border-[#C39A52]/50 text-[#C39A52] transition hover:bg-[#C39A52] hover:text-[#3D1023]"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
             )}
 
-            {/* Desktop Hover 2.8x Zari & Weave Loupe Window */}
             {hasImage && zoom === 1 && hoverPoint && (
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute bottom-14 left-3 hidden overflow-hidden rounded-2xl border-2 border-[#C39A52] bg-[#FFF9F2] shadow-xl lg:block"
+                className="pointer-events-none absolute bottom-16 left-3 hidden flex-col items-center gap-1.5 rounded-3xl border border-[#C39A52]/70 bg-[#220713]/90 p-2 shadow-2xl backdrop-blur-xl lg:flex"
               >
-                <canvas ref={loupeCanvasRef} width={160} height={160} className="block h-32 w-32" />
-                <div className="border-t border-[#D9A0A9]/40 bg-[#3D1023] px-2 py-0.5 text-center text-[10px] font-medium text-[#FFF9F2]">
-                  2.8x Zari Loupe
+                <div className="relative h-32 w-32 overflow-hidden rounded-full border-2 border-[#C39A52] ring-2 ring-white/30">
+                  <canvas ref={loupeCanvasRef} width={180} height={180} className="block h-full w-full" />
+                  <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-[#C39A52]/40" />
+                  <div className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-[#C39A52]/40" />
+                </div>
+                <div className="flex items-center gap-1.5 px-2 text-[10px] font-semibold tracking-wider text-[#FFF9F2]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#C39A52]" />
+                  <span>3.2× WEAVE MACRO</span>
                 </div>
               </div>
             )}
@@ -486,14 +544,13 @@ export default function SareeImageGallery({
         </div>
       </div>
 
-      {/* Fullscreen Lightbox Modal */}
       {fullscreenOpen && (
         <div
           role="dialog"
           aria-modal="true"
           aria-label={`${product?.name} fullscreen gallery`}
           onClick={() => setFullscreenOpen(false)}
-          className="fixed inset-0 z-50 flex flex-col justify-between bg-[#220713]/95 p-4 text-[#FFF9F2] sm:p-6"
+          className="fixed inset-0 z-50 flex flex-col justify-between bg-[#18040C]/95 p-4 text-[#FFF9F2] backdrop-blur-md sm:p-6"
         >
           <div
             onClick={(e) => e.stopPropagation()}
@@ -505,38 +562,46 @@ export default function SareeImageGallery({
               </p>
               <h2 className="font-serif text-lg font-semibold text-[#FFF9F2]">{product?.name}</h2>
             </div>
-            <div className="flex items-center gap-2">
+
+            <div className="flex flex-wrap items-center gap-2">
               {hasImage && (
-                <>
+                <div className="flex items-center gap-1 rounded-full border border-[#C39A52]/40 bg-[#3D1023]/90 p-1">
                   <button
                     type="button"
                     onClick={handleZoomOut}
                     disabled={zoom <= 1}
                     aria-label="Fullscreen zoom out"
-                    className="rounded-full border border-[#D9A0A9]/40 bg-[#3D1023] p-2 text-[#FFF9F2] hover:bg-[#641B32] disabled:opacity-40"
+                    className="rounded-full p-1.5 text-[#FFF9F2] hover:bg-[#641B32] disabled:opacity-40"
                   >
                     <ZoomOut className="h-4 w-4" />
                   </button>
-                  <span className="text-xs font-semibold">{Math.round(zoom * 100)}%</span>
+                  {ZOOM_PRESETS.map((preset) => {
+                    const active = Math.abs(zoom - preset.scale) < 0.05;
+                    return (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => setZoomPreset(preset.scale)}
+                        className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${
+                          active
+                            ? 'bg-[#C39A52] text-[#3D1023]'
+                            : 'text-[#FFF9F2]/80 hover:bg-[#641B32]'
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    );
+                  })}
                   <button
                     type="button"
                     onClick={handleZoomIn}
                     disabled={zoom >= 3}
                     aria-label="Fullscreen zoom in"
-                    className="rounded-full border border-[#D9A0A9]/40 bg-[#3D1023] p-2 text-[#FFF9F2] hover:bg-[#641B32] disabled:opacity-40"
+                    className="rounded-full p-1.5 text-[#FFF9F2] hover:bg-[#641B32] disabled:opacity-40"
                   >
                     <ZoomIn className="h-4 w-4" />
                   </button>
-                  {zoom > 1 && (
-                    <button
-                      type="button"
-                      onClick={handleResetZoom}
-                      className="rounded-full border border-[#D9A0A9]/40 bg-[#3D1023] px-3 py-1.5 text-xs font-medium hover:bg-[#641B32]"
-                    >
-                      Reset
-                    </button>
-                  )}
-                </>
+                </div>
               )}
               <button
                 type="button"
@@ -571,13 +636,13 @@ export default function SareeImageGallery({
                   ref={modalZoomCanvasRef}
                   width={900}
                   height={1200}
-                  className="max-h-full max-w-full cursor-grab touch-none rounded-xl object-contain"
+                  className="max-h-full max-w-full cursor-grab touch-none rounded-2xl border border-[#C39A52]/40 object-contain"
                 />
               ) : (
                 <img
                   src={activeAngle.image_url}
                   alt={activeAngle.alt_text || product?.name}
-                  className="max-h-[75vh] max-w-full rounded-xl object-contain"
+                  className="max-h-[72vh] max-w-full rounded-2xl object-contain shadow-2xl"
                 />
               )
             ) : (
@@ -605,21 +670,30 @@ export default function SareeImageGallery({
             onClick={(e) => e.stopPropagation()}
             className="mx-auto flex max-w-2xl items-center gap-2 overflow-x-auto pb-1"
           >
-            {angles.map((angle, idx) => (
-              <button
-                key={angle.key || idx}
-                type="button"
-                onClick={() => selectAngle(idx)}
-                className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition ${
-                  idx === activeIndex
-                    ? 'border-[#C39A52] bg-[#C39A52] font-semibold text-[#3D1023]'
-                    : 'border-[#D9A0A9]/40 bg-[#3D1023] text-[#FFF9F2]/80 hover:border-[#FFF9F2]'
-                }`}
-              >
-                <span>{idx + 1}.</span>
-                <span>{angle.label}</span>
-              </button>
-            ))}
+            {angles.map((angle, idx) => {
+              const thumbAvailable = angle.status === 'available' && angle.image_url && !failedUrls[angle.image_url];
+              return (
+                <button
+                  key={angle.key || idx}
+                  type="button"
+                  onClick={() => selectAngle(idx)}
+                  className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition ${
+                    idx === activeIndex
+                      ? 'border-[#C39A52] bg-[#C39A52] font-semibold text-[#3D1023]'
+                      : 'border-[#D9A0A9]/40 bg-[#3D1023] text-[#FFF9F2]/80 hover:border-[#FFF9F2]'
+                  }`}
+                >
+                  {thumbAvailable && (
+                    <img
+                      src={angle.image_url}
+                      alt={angle.label}
+                      className="h-5 w-4 rounded object-cover object-top"
+                    />
+                  )}
+                  <span>{idx + 1}. {angle.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

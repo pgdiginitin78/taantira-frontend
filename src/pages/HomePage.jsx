@@ -7,13 +7,13 @@ import {
   Gem,
   Grid,
   Leaf,
-  Star,
   Truck,
 } from "lucide-react";
 import api from "../services/api";
 import ProductCard from "../components/ProductCard";
 import QuickViewModal from "../components/QuickViewModal";
-import { useAuthStore } from "../store/useAuthStore";
+import { useWishlistStore } from "../store/useWishlistStore";
+import { useCartStore } from "../store/useCartStore";
 import {
   FALLBACK_CATEGORIES,
   buildFallbackHomepageData,
@@ -114,53 +114,18 @@ const getInitialHomepageState = () => {
       nauvari: catalog.nauvari_sarees,
       jewellery: catalog.jewellery_products,
     },
-    customer_reviews: [
-      {
-        id: 1,
-        rating: 5,
-        title: "Exquisite Banarasi craftsmanship",
-        comment:
-          "The deep burgundy silk glows under evening light without feeling heavy. Custom blouse stitching fit like a dream.",
-        author: { full_name: "Ananya Deshmukh" },
-        product: {
-          name: "Aaradhya Deep Burgundy Banarasi Silk Saree",
-          slug: "aaradhya-burgundy-banarasi-silk-saree",
-        },
-      },
-      {
-        id: 2,
-        rating: 5,
-        title: "Authentic Kanchipuram lustre",
-        comment:
-          "Crisp antique gold temple weave and rich berry rose silk drape. Paired it with the Ruhani chandbalis.",
-        author: { full_name: "Meera Iyer" },
-        product: {
-          name: "Meenakshi Berry Rose Kanjivaram Silk Saree",
-          slug: "meenakshi-berry-rose-kanjivaram-saree",
-        },
-      },
-      {
-        id: 3,
-        rating: 5,
-        title: "Featherlight saree earrings",
-        comment:
-          "The champagne gold chandbali set pairs effortlessly with both Banarasi and Tussar silk weaves.",
-        author: { full_name: "Rhea Kulkarni" },
-        product: {
-          name: "Ruhani Champagne Gold & Pearl Chandbali Jewellery Set",
-          slug: "ruhani-champagne-gold-pearl-chandbali-set",
-        },
-      },
-    ],
   };
 };
 
 export default function HomePage() {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const wishlistItems = useWishlistStore((s) => s.items);
+  const toggleWishlist = useWishlistStore((s) => s.toggleWishlist);
+  const addItem = useCartStore((s) => s.addItem);
   const [data, setData] = useState(getInitialHomepageState);
   const [slideIdx, setSlideIdx] = useState(0);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
-  const [wishlistedIds, setWishlistedIds] = useState(new Set());
+
+  const wishlistedIds = new Set(wishlistItems.map((entry) => Number(entry.id || entry.product?.id)));
 
   useEffect(() => {
     let active = true;
@@ -177,22 +142,17 @@ export default function HomePage() {
     };
   }, []);
 
-  const handleToggleWishlist = async (product) => {
-    if (!isAuthenticated) return;
-    try {
-      const res = await api.post("/users/wishlist/toggle", {
-        product_id: product.id,
-      });
-      const active = res.data?.data?.wishlisted;
-      setWishlistedIds((prev) => {
-        const next = new Set(prev);
-        if (active) next.add(product.id);
-        else next.delete(product.id);
-        return next;
-      });
-    } catch {
-      // Ignore error
-    }
+  const handleToggleWishlist = (product) => toggleWishlist(product);
+
+  const handleQuickAddToCart = async (product) => {
+    const variant = product?.variants?.[0];
+    if (!variant) return;
+    await addItem({
+      product_id: product.id,
+      variant_id: variant.id,
+      quantity: 1,
+      productPreview: product,
+    });
   };
 
   const activeSlide = HERO_SLIDES[slideIdx] || HERO_SLIDES[0];
@@ -395,14 +355,14 @@ export default function HomePage() {
                 product={product}
                 onQuickView={setQuickViewProduct}
                 onToggleWishlist={handleToggleWishlist}
-                isWishlisted={wishlistedIds.has(product.id)}
+                onQuickAddToCart={handleQuickAddToCart}
+                isWishlisted={wishlistedIds.has(Number(product.id))}
               />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Handwoven Saree Collection */}
       <section className="mx-auto w-full max-w-7xl px-4 sm:px-6">
         <SectionHeader
           eyebrow="Photographed Handloom Highlights"
@@ -419,13 +379,13 @@ export default function HomePage() {
                 product={product}
                 onQuickView={setQuickViewProduct}
                 onToggleWishlist={handleToggleWishlist}
-                isWishlisted={wishlistedIds.has(product.id)}
+                onQuickAddToCart={handleQuickAddToCart}
+                isWishlisted={wishlistedIds.has(Number(product.id))}
               />
             ))}
         </div>
       </section>
 
-      {/* Saree Jewellery Pairing Capsule (10% Curated Jewellery) */}
       <section className="bg-[#F5E7E8]/55 py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <SectionHeader
@@ -444,7 +404,8 @@ export default function HomePage() {
                     product={product}
                     onQuickView={setQuickViewProduct}
                     onToggleWishlist={handleToggleWishlist}
-                    isWishlisted={wishlistedIds.has(product.id)}
+                    onQuickAddToCart={handleQuickAddToCart}
+                    isWishlisted={wishlistedIds.has(Number(product.id))}
                   />
                 ))}
             </div>
@@ -482,7 +443,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Best Selling Sarees */}
       <section className="mx-auto w-full max-w-7xl px-4 sm:px-6">
         <SectionHeader
           eyebrow="Verified Order Metrics"
@@ -498,7 +458,8 @@ export default function HomePage() {
                 product={product}
                 onQuickView={setQuickViewProduct}
                 onToggleWishlist={handleToggleWishlist}
-                isWishlisted={wishlistedIds.has(product.id)}
+                onQuickAddToCart={handleQuickAddToCart}
+                isWishlisted={wishlistedIds.has(Number(product.id))}
               />
             ))}
           </div>
@@ -509,47 +470,6 @@ export default function HomePage() {
             recorded sales are never artificially marked as best sellers).
           </div>
         )}
-      </section>
-
-      {/* Customer Reviews */}
-      <section className="mx-auto w-full max-w-7xl px-4 sm:px-6">
-        <SectionHeader
-          eyebrow="Client Voices"
-          title="Verified Patron Reviews"
-        />
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {(data?.customer_reviews || []).slice(0, 3).map((review) => (
-            <div
-              key={review.id}
-              className="rounded-2xl border border-[#D9A0A9]/40 bg-white p-6 shadow-sm"
-            >
-              <div className="flex items-center gap-1 text-[#C39A52]">
-                {Array.from({ length: review.rating || 5 }).map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-[#C39A52]" />
-                ))}
-              </div>
-              <p className="mt-3 text-sm font-bold text-[#3D1023]">
-                {review.title || "Cherished Craft"}
-              </p>
-              <p className="mt-2 text-xs leading-relaxed text-[#641B32]/85">
-                &ldquo;{review.comment}&rdquo;
-              </p>
-              <div className="mt-4 border-t border-[#F5E7E8] pt-3 text-xs">
-                <p className="font-semibold text-[#3D1023]">
-                  {review.author?.full_name || "Verified Buyer"}
-                </p>
-                {review.product && (
-                  <Link
-                    to={`/products/${review.product.slug}`}
-                    className="text-[#A83F5E] hover:underline"
-                  >
-                    {review.product.name}
-                  </Link>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
       </section>
 
       <QuickViewModal

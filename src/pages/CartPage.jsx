@@ -36,31 +36,14 @@ export default function CartPage() {
   });
 
   useEffect(() => {
-    if (isAuthenticated) fetchCart();
+    fetchCart();
   }, [isAuthenticated, fetchCart]);
 
-  if (!isAuthenticated) {
-    return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <ShoppingBag className="mx-auto h-12 w-12 text-[#641B32]" />
-        <h1 className="mt-4 font-serif text-3xl font-bold text-[#3D1023]">
-          Your Taantira Shopping Bag
-        </h1>
-        <p className="mt-2 text-sm text-[#641B32]/80">
-          Please sign in to save pieces to your bag and apply privileges.
-        </p>
-        <Link
-          to="/login"
-          state={{ from: "/cart" }}
-          className="mt-6 inline-block rounded-full bg-[#641B32] px-6 py-3 text-xs font-semibold text-[#FFF9F2]"
-        >
-          Sign In to View Bag
-        </Link>
-      </div>
-    );
-  }
-
   const onApplyCoupon = async (values) => {
+    if (!isAuthenticated) {
+      setCouponErr("Please sign in to apply privilege codes.");
+      return;
+    }
     setCouponErr("");
     setCouponMsg("");
     try {
@@ -73,6 +56,7 @@ export default function CartPage() {
   };
 
   const handleRemoveCoupon = async () => {
+    if (!isAuthenticated) return;
     await removeCoupon();
     setCouponMsg("");
     setCouponErr("");
@@ -80,21 +64,44 @@ export default function CartPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-      <h1 className="font-serif text-3xl font-bold text-[#3D1023]">
-        Shopping Bag ({items.length})
-      </h1>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="font-serif text-3xl font-bold text-[#3D1023]">
+          Shopping Bag ({items.reduce((sum, i) => sum + Number(i.quantity || 1), 0)})
+        </h1>
+        {!isAuthenticated && (
+          <Link
+            to="/login"
+            state={{ from: "/cart" }}
+            className="inline-flex items-center gap-2 rounded-full border border-[#641B32]/40 bg-white px-4 py-2 text-xs font-semibold text-[#641B32] hover:bg-[#F5E7E8]"
+          >
+            Sign In to Sync Bag &amp; Apply Offers
+          </Link>
+        )}
+      </div>
 
       {items.length === 0 ? (
         <div className="mt-8 rounded-3xl border border-[#D9A0A9]/40 bg-white p-12 text-center shadow-sm">
-          <p className="text-base font-medium text-[#3D1023]">
+          <ShoppingBag className="mx-auto h-10 w-10 text-[#D9A0A9]" />
+          <p className="mt-3 text-base font-medium text-[#3D1023]">
             Your shopping bag is currently empty.
           </p>
-          <Link
-            to="/collections/all"
-            className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#641B32] px-6 py-2.5 text-xs font-semibold text-[#FFF9F2]"
-          >
-            Explore Collections <ArrowRight className="h-4 w-4" />
-          </Link>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              to="/collections/all"
+              className="inline-flex items-center gap-2 rounded-full bg-[#641B32] px-6 py-2.5 text-xs font-semibold text-[#FFF9F2]"
+            >
+              Explore Collections <ArrowRight className="h-4 w-4" />
+            </Link>
+            {!isAuthenticated && (
+              <Link
+                to="/login"
+                state={{ from: "/cart" }}
+                className="inline-flex items-center gap-2 rounded-full border border-[#641B32] px-6 py-2.5 text-xs font-semibold text-[#641B32]"
+              >
+                Sign In
+              </Link>
+            )}
+          </div>
         </div>
       ) : (
         <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-12">
@@ -314,10 +321,14 @@ export default function CartPage() {
                 color="primary"
                 fullWidth
                 size="large"
-                onClick={() => navigate("/checkout")}
+                onClick={() =>
+                  isAuthenticated
+                    ? navigate("/checkout")
+                    : navigate("/login", { state: { from: "/checkout" } })
+                }
                 className="mt-6 py-3"
               >
-                Proceed to Checkout
+                {isAuthenticated ? "Proceed to Checkout" : "Sign In to Checkout"}
               </Button>
             </div>
           </div>

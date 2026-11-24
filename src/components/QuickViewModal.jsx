@@ -1,17 +1,15 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, IconButton, Button } from '@mui/material';
-import { X, ShoppingBag, ArrowRight, Camera } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { X, ShoppingBag, ArrowRight, Camera, Check } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { formatINR } from '../utils/formatters';
 import { useCartStore } from '../store/useCartStore';
-import { useAuthStore } from '../store/useAuthStore';
 
 export default function QuickViewModal({ product, open, onClose }) {
-  const navigate = useNavigate();
   const addItem = useCartStore((s) => s.addItem);
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [selectedVariantId, setSelectedVariantId] = useState(null);
   const [feedback, setFeedback] = useState('');
+  const [addedSuccess, setAddedSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   if (!product) return null;
@@ -22,17 +20,19 @@ export default function QuickViewModal({ product, open, onClose }) {
   const price = selectedVariant?.price_override || product.sale_price || product.base_price;
 
   const handleAddToBag = async () => {
-    if (!isAuthenticated) {
-      onClose();
-      navigate('/login');
-      return;
-    }
     if (!selectedVariant) return;
     setSubmitting(true);
     setFeedback('');
     try {
-      await addItem({ product_id: product.id, variant_id: selectedVariant.id, quantity: 1 });
+      await addItem({
+        product_id: product.id,
+        variant_id: selectedVariant.id,
+        quantity: 1,
+        productPreview: product,
+      });
+      setAddedSuccess(true);
       setFeedback('Added to your Taantira shopping bag.');
+      setTimeout(() => setAddedSuccess(false), 2200);
     } catch (err) {
       setFeedback(err.response?.data?.message || 'Unable to add item right now.');
     } finally {
@@ -109,10 +109,10 @@ export default function QuickViewModal({ product, open, onClose }) {
                 color="primary"
                 disabled={submitting || !selectedVariant || selectedVariant.stock_qty <= 0}
                 onClick={handleAddToBag}
-                startIcon={<ShoppingBag className="h-4 w-4" />}
+                startIcon={addedSuccess ? <Check className="h-4 w-4" /> : <ShoppingBag className="h-4 w-4" />}
                 className="py-2.5"
               >
-                {submitting ? 'Adding...' : 'Add to Shopping Bag'}
+                {submitting ? 'Adding...' : addedSuccess ? 'Added to Bag' : 'Add to Shopping Bag'}
               </Button>
               <Link
                 to={`/products/${product.slug}`}

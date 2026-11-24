@@ -13,6 +13,8 @@ import { SlidersHorizontal, X, Search, RotateCcw } from 'lucide-react';
 import api from '../services/api';
 import ProductCard from '../components/ProductCard';
 import QuickViewModal from '../components/QuickViewModal';
+import { useWishlistStore } from '../store/useWishlistStore';
+import { useCartStore } from '../store/useCartStore';
 import {
   FALLBACK_CATEGORIES,
   FALLBACK_COLLECTIONS,
@@ -47,6 +49,25 @@ export default function CollectionPage() {
   const [loadedKey, setLoadedKey] = useState('');
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  const wishlistItems = useWishlistStore((s) => s.items);
+  const toggleWishlist = useWishlistStore((s) => s.toggleWishlist);
+  const addItem = useCartStore((s) => s.addItem);
+  const wishlistedIds = useMemo(
+    () => new Set(wishlistItems.map((entry) => Number(entry.id || entry.product?.id))),
+    [wishlistItems]
+  );
+
+  const handleQuickAddToCart = async (product) => {
+    const variant = product?.variants?.[0];
+    if (!variant) return;
+    await addItem({
+      product_id: product.id,
+      variant_id: variant.id,
+      quantity: 1,
+      productPreview: product,
+    });
+  };
 
   const selectedCategories = useMemo(
     () => parseCsv(searchParams.get('categories')),
@@ -541,7 +562,14 @@ export default function CollectionPage() {
           ) : (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {products.map((product) => (
-                <ProductCard key={product.id} product={product} onQuickView={setQuickViewProduct} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onQuickView={setQuickViewProduct}
+                  onToggleWishlist={toggleWishlist}
+                  onQuickAddToCart={handleQuickAddToCart}
+                  isWishlisted={wishlistedIds.has(Number(product.id))}
+                />
               ))}
             </div>
           )}

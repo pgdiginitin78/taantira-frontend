@@ -1,13 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
 import {
-  Button,
   Checkbox,
   FormControlLabel,
-  Rating,
   TextField,
   Alert,
 } from '@mui/material';
@@ -17,7 +12,6 @@ import {
   ShieldCheck,
   RotateCcw,
   Sparkles,
-  MessageCircle,
   Gem,
   ChevronRight,
   Truck,
@@ -26,22 +20,20 @@ import {
   Gift,
   Award,
   ShoppingCart,
+  Check,
+  Heart,
 } from 'lucide-react';
 import api from '../services/api';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
-import { formatINR, calcDiscountPercent, formatDateOnly } from '../utils/formatters';
-import { reviewValidationSchema } from '../validations/schemas';
+import { useWishlistStore } from '../store/useWishlistStore';
+import { formatINR, calcDiscountPercent } from '../utils/formatters';
 import ProductCard from '../components/ProductCard';
 import SareeImageGallery from '../components/SareeImageGallery';
 import {
   FALLBACK_PRODUCTS,
   getMatchingJewellery,
 } from '../utils/fallbackCatalog';
-
-const questionSchema = yup.object({
-  question: yup.string().trim().min(5, 'Enter at least 5 characters').required('Question is required'),
-});
 
 const COLOR_SWATCH_CLASSES = [
   { name: 'Wine Burgundy', bg: 'bg-[#641B32]' },
@@ -64,22 +56,22 @@ function ProductDetailContent({ slug }) {
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const addItem = useCartStore((s) => s.addItem);
+  const wishlistItems = useWishlistStore((s) => s.items);
+  const toggleWishlist = useWishlistStore((s) => s.toggleWishlist);
 
   const [detail, setDetail] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedColor, setSelectedColor] = useState(COLOR_SWATCH_CLASSES[0].name);
   const [quantity, setQuantity] = useState(1);
-  const [wishlisted, setWishlisted] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
+  const [justAddedCart, setJustAddedCart] = useState(false);
 
-  // Optional Saree tailoring & gift checkboxes
   const [matchingBlouse, setMatchingBlouse] = useState(false);
   const [blouseNotes, setBlouseNotes] = useState('');
   const [petticoat, setPetticoat] = useState(false);
   const [giftWrap, setGiftWrap] = useState(false);
   const [giftBox, setGiftBox] = useState(false);
 
-  // PIN code serviceability check
   const [pincode, setPincode] = useState('');
   const [pincodeInfo, setPincodeInfo] = useState(null);
   const [pincodeErr, setPincodeErr] = useState('');
@@ -87,15 +79,7 @@ function ProductDetailContent({ slug }) {
   const [actionMsg, setActionMsg] = useState('');
   const [actionErr, setActionErr] = useState('');
 
-  const reviewForm = useForm({
-    resolver: yupResolver(reviewValidationSchema),
-    defaultValues: { rating: 5, title: '', comment: '' },
-  });
-
-  const questionForm = useForm({
-    resolver: yupResolver(questionSchema),
-    defaultValues: { question: '' },
-  });
+  const wishlistedIds = new Set(wishlistItems.map((entry) => Number(entry.id || entry.product?.id)));
 
   const buildFallbackDetail = (targetSlug) => {
     const found = FALLBACK_PRODUCTS.find((p) => p.slug === targetSlug) || FALLBACK_PRODUCTS[0];
@@ -109,25 +93,10 @@ function ProductDetailContent({ slug }) {
     const jewelProduct = FALLBACK_PRODUCTS.find((p) => p.primaryCategory?.slug === 'jewellery');
 
     return {
-      product: { ...found, reviews: [], questions: [] },
+      product: { ...found },
       matching_products: jewelProduct && found.primaryCategory?.slug !== 'jewellery' ? [jewelProduct] : [],
       similar_products: siblingSarees,
     };
-  };
-
-  const loadProduct = () => {
-    api
-      .get(`/products/${slug}`)
-      .then((res) => {
-        const d = res.data?.data;
-        setDetail(d);
-        setSelectedVariant(d?.product?.variants?.[0] || null);
-      })
-      .catch(() => {
-        const fallback = buildFallbackDetail(slug);
-        setDetail(fallback);
-        setSelectedVariant(fallback.product.variants?.[0] || null);
-      });
   };
 
   useEffect(() => {
@@ -156,6 +125,7 @@ function ProductDetailContent({ slug }) {
   }
 
   const product = detail.product;
+  const wishlisted = wishlistedIds.has(Number(product.id));
   const subCategory = product.primaryCategory || {};
   const mainCategory =
     subCategory.parent ||
@@ -188,18 +158,8 @@ function ProductDetailContent({ slug }) {
 
   const handleToggleWishlist = async () => {
     setActionErr('');
-    if (!isAuthenticated) {
-      navigate('/login', { state: { from: `/products/${slug}` } });
-      return;
-    }
-    try {
-      const res = await api.post('/users/wishlist/toggle', { product_id: product.id });
-      const active = Boolean(res.data?.data?.wishlisted);
-      setWishlisted(active);
-      setActionMsg(active ? 'Saved to your Taantira wishlist.' : 'Removed from wishlist.');
-    } catch {
-      setWishlisted((w) => !w);
-    }
+    const saved = await toggleWishlist(product);
+    setActionMsg(saved ? 'Saved to your Taantira wishlist.' : 'Removed from wishlist.');
   };
 
   const handleShare = async () => {
@@ -214,16 +174,13 @@ function ProductDetailContent({ slug }) {
   const handleBagAction = async (buyNow = false) => {
     setActionErr('');
     setActionMsg('');
-    if (!isAuthenticated) {
-      navigate('/login', { state: { from: `/products/${slug}` } });
-      return;
-    }
     if (!selectedVariant) return;
     try {
       await addItem({
         product_id: product.id,
         variant_id: selectedVariant.id,
         quantity,
+        productPreview: product,
         custom_options: {
           matching_blouse: subCategory.supports_blouse_option ? matchingBlouse : false,
           blouse_stitching_notes: subCategory.supports_blouse_option ? blouseNotes || null : null,
@@ -234,9 +191,15 @@ function ProductDetailContent({ slug }) {
         },
       });
       if (buyNow) {
-        navigate('/checkout');
+        if (isAuthenticated) {
+          navigate('/checkout');
+        } else {
+          navigate('/login', { state: { from: '/checkout' } });
+        }
       } else {
-        setActionMsg('Added to your shopping cart.');
+        setJustAddedCart(true);
+        setActionMsg('Added to your shopping bag.');
+        setTimeout(() => setJustAddedCart(false), 2400);
       }
     } catch (err) {
       setActionErr(err.response?.data?.message || 'Unable to add item.');
@@ -249,19 +212,31 @@ function ProductDetailContent({ slug }) {
       return;
     }
     if (linkedChandbali?.variants?.[0]) {
-      if (!isAuthenticated) {
-        navigate('/login', { state: { from: `/products/${slug}` } });
-        return;
-      }
       try {
-        await addItem({ product_id: linkedChandbali.id, variant_id: linkedChandbali.variants[0].id, quantity: 1 });
-        setActionMsg(`Added ${linkedChandbali.name} to your cart.`);
+        await addItem({
+          product_id: linkedChandbali.id,
+          variant_id: linkedChandbali.variants[0].id,
+          quantity: 1,
+          productPreview: linkedChandbali,
+        });
+        setActionMsg(`Added ${linkedChandbali.name} to your bag.`);
       } catch {
         navigate('/collections/jewellery');
       }
       return;
     }
     navigate('/collections/jewellery');
+  };
+
+  const handleQuickAddRelated = async (relProduct) => {
+    const variant = relProduct?.variants?.[0];
+    if (!variant) return;
+    await addItem({
+      product_id: relProduct.id,
+      variant_id: variant.id,
+      quantity: 1,
+      productPreview: relProduct,
+    });
   };
 
   const handlePincodeCheck = async (e) => {
@@ -288,28 +263,8 @@ function ProductDetailContent({ slug }) {
     }
   };
 
-  const onSubmitReview = async (values) => {
-    try {
-      await api.post('/reviews', { product_id: product.id, ...values });
-      reviewForm.reset();
-      loadProduct();
-    } catch (err) {
-      setActionErr(err.response?.data?.message || 'Sign in to submit a review.');
-    }
-  };
-
-  const onSubmitQuestion = async (values) => {
-    try {
-      await api.post(`/products/${product.id}/questions`, values);
-      questionForm.reset();
-      loadProduct();
-    } catch (err) {
-      setActionErr(err.response?.data?.message || 'Sign in to ask a question.');
-    }
-  };
-
   return (
-    <div className="mx-auto max-w-7xl space-y-12 px-4 py-5 sm:px-6">
+    <div className="mx-auto max-w-[1440px] space-y-12 px-4 py-5 sm:px-6">
       {/* Breadcrumb Bar matching exact reference hierarchy */}
       <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-xs text-[#641B32]/75">
         <Link to="/" className="inline-flex items-center gap-1 hover:text-[#641B32] hover:underline">
@@ -375,12 +330,6 @@ function ProductDetailContent({ slug }) {
             <p className="mt-1 text-xs text-[#641B32]/80">
               {mainCategory.name} &nbsp;|&nbsp; Fabric: <span className="font-medium text-[#3D1023]">{product.fabric}</span>
             </p>
-            <div className="mt-2 flex items-center gap-2">
-              <Rating value={Number(product.rating_avg || 5)} precision={0.1} readOnly size="small" />
-              <span className="text-xs font-medium text-[#3D1023]">
-                {Number(product.rating_avg || 5).toFixed(1)} ({product.review_count || 0} reviews)
-              </span>
-            </div>
           </div>
 
           {/* Price Row */}
@@ -450,16 +399,19 @@ function ProductDetailContent({ slug }) {
             </span>
           </div>
 
-          {/* Primary Pill Action Buttons: Add to Cart & Buy Now */}
           <div className="grid grid-cols-2 gap-3 pt-1">
             <button
               type="button"
               disabled={availableStock <= 0}
               onClick={() => handleBagAction(false)}
-              className="flex items-center justify-center gap-2 rounded-full bg-[#641B32] px-4 py-3 text-xs font-semibold text-[#FFF9F2] shadow-sm transition hover:bg-[#3D1023] disabled:opacity-50 sm:text-sm"
+              className={`flex items-center justify-center gap-2 rounded-full px-4 py-3 text-xs font-semibold shadow-sm transition disabled:opacity-50 sm:text-sm ${
+                justAddedCart
+                  ? 'bg-emerald-700 text-white'
+                  : 'bg-[#641B32] text-[#FFF9F2] hover:bg-[#3D1023]'
+              }`}
             >
-              <ShoppingCart className="h-4 w-4" />
-              <span>Add to Cart</span>
+              {justAddedCart ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
+              <span>{justAddedCart ? 'Added to Cart' : 'Add to Cart'}</span>
             </button>
             <button
               type="button"
@@ -472,7 +424,34 @@ function ProductDetailContent({ slug }) {
             </button>
           </div>
 
-          {actionMsg && <Alert severity="success">{actionMsg}</Alert>}
+          <button
+            type="button"
+            onClick={handleToggleWishlist}
+            className={`flex w-full items-center justify-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition ${
+              wishlisted
+                ? 'border-[#641B32] bg-[#F5E7E8] text-[#641B32]'
+                : 'border-[#D9A0A9]/60 bg-white text-[#3D1023] hover:bg-[#F5E7E8]'
+            }`}
+          >
+            <Heart className={`h-3.5 w-3.5 ${wishlisted ? 'fill-[#641B32] text-[#641B32]' : ''}`} />
+            <span>{wishlisted ? 'Saved in Wishlist' : 'Add to Wishlist'}</span>
+          </button>
+
+          {actionMsg && (
+            <Alert
+              severity="success"
+              action={
+                <Link
+                  to={actionMsg.includes('wishlist') ? (isAuthenticated ? '/account/wishlist' : '/wishlist') : '/cart'}
+                  className="text-xs font-bold text-emerald-900 underline"
+                >
+                  {actionMsg.includes('wishlist') ? 'View Wishlist' : 'View Cart'}
+                </Link>
+              }
+            >
+              {actionMsg}
+            </Alert>
+          )}
           {actionErr && <Alert severity="error">{actionErr}</Alert>}
 
           {/* Check Delivery Box matching Image 1 */}
@@ -526,14 +505,12 @@ function ProductDetailContent({ slug }) {
             </div>
           </div>
 
-          {/* 4-Tab Section matching Image 1 ("Product Details", "Fabric & Care", "Delivery & Returns", "Reviews") */}
           <div>
             <div className="flex flex-wrap gap-5 border-b border-[#D9A0A9]/35 text-xs font-semibold">
               {[
                 { key: 'details', label: 'Product Details' },
                 { key: 'fabric', label: 'Fabric & Care' },
                 { key: 'delivery', label: 'Delivery & Returns' },
-                { key: 'reviews', label: `Reviews (${product.review_count || 0})` },
               ].map((t) => (
                 <button
                   key={t.key}
@@ -625,25 +602,6 @@ function ProductDetailContent({ slug }) {
                   <p>Complimentary shipping on orders above ₹2,999. 7-day easy return on uncustomized sarees.</p>
                 </div>
               )}
-
-              {activeTab === 'reviews' && (
-                <div className="flex flex-col gap-3">
-                  {(product.reviews || []).length === 0 ? (
-                    <p>No customer reviews yet for this saree.</p>
-                  ) : (
-                    product.reviews.map((rev) => (
-                      <div key={rev.id} className="rounded-xl bg-white p-3 border border-[#D9A0A9]/30">
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold">{rev.author?.full_name || 'Patron'}</span>
-                          <Rating value={rev.rating} readOnly size="small" />
-                        </div>
-                        {rev.title && <p className="mt-1 font-semibold">{rev.title}</p>}
-                        <p className="mt-1">{rev.comment}</p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -699,7 +657,6 @@ function ProductDetailContent({ slug }) {
         </aside>
       </div>
 
-      {/* Similar Creations & Atelier Reviews/Q&A Below Fold */}
       {detail.similar_products?.length > 0 && (
         <section>
           <h2 className="mb-4 font-serif text-2xl font-bold text-[#3D1023]">
@@ -707,86 +664,17 @@ function ProductDetailContent({ slug }) {
           </h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {detail.similar_products.map((sp) => (
-              <ProductCard key={sp.id} product={sp} />
+              <ProductCard
+                key={sp.id}
+                product={sp}
+                onToggleWishlist={toggleWishlist}
+                onQuickAddToCart={handleQuickAddRelated}
+                isWishlisted={wishlistedIds.has(Number(sp.id))}
+              />
             ))}
           </div>
         </section>
       )}
-
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <div className="flex flex-col gap-4 rounded-2xl border border-[#D9A0A9]/40 bg-white p-6">
-          <h2 className="font-serif text-xl font-bold text-[#3D1023]">Write a Review</h2>
-          <form onSubmit={reviewForm.handleSubmit(onSubmitReview)} className="flex flex-col gap-3">
-            <Controller
-              name="rating"
-              control={reviewForm.control}
-              render={({ field }) => (
-                <Rating value={Number(field.value)} onChange={(_, val) => field.onChange(val || 5)} />
-              )}
-            />
-            <Controller
-              name="title"
-              control={reviewForm.control}
-              render={({ field }) => <TextField {...field} size="small" fullWidth label="Headline" />}
-            />
-            <Controller
-              name="comment"
-              control={reviewForm.control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  size="small"
-                  fullWidth
-                  multiline
-                  rows={2}
-                  label="Your Experience"
-                  error={Boolean(reviewForm.formState.errors.comment)}
-                  helperText={reviewForm.formState.errors.comment?.message}
-                />
-              )}
-            />
-            <Button type="submit" variant="outlined" color="primary" size="small">
-              Submit Review
-            </Button>
-          </form>
-        </div>
-
-        <div className="flex flex-col gap-4 rounded-2xl border border-[#D9A0A9]/40 bg-white p-6">
-          <h2 className="flex items-center gap-2 font-serif text-xl font-bold text-[#3D1023]">
-            <MessageCircle className="h-5 w-5 text-[#641B32]" /> Questions &amp; Answers
-          </h2>
-          {(product.questions || []).length > 0 && (
-            <div className="flex flex-col gap-2">
-              {product.questions.map((q) => (
-                <div key={q.id} className="rounded-xl bg-[#FFF9F2] p-3 text-xs">
-                  <p className="font-semibold text-[#3D1023]">Q: {q.question}</p>
-                  <p className="mt-1 text-[#641B32]">{q.answer ? `A: ${q.answer}` : 'Awaiting atelier response.'}</p>
-                  <p className="mt-1 text-[10px] text-[#641B32]/60">{formatDateOnly(q.created_at)}</p>
-                </div>
-              ))}
-            </div>
-          )}
-          <form onSubmit={questionForm.handleSubmit(onSubmitQuestion)} className="flex flex-col gap-3">
-            <Controller
-              name="question"
-              control={questionForm.control}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  size="small"
-                  fullWidth
-                  label="Ask a question about fabric, weave, or tailoring"
-                  error={Boolean(questionForm.formState.errors.question)}
-                  helperText={questionForm.formState.errors.question?.message}
-                />
-              )}
-            />
-            <Button type="submit" variant="outlined" color="primary" size="small">
-              Ask Question
-            </Button>
-          </form>
-        </div>
-      </div>
     </div>
   );
 }

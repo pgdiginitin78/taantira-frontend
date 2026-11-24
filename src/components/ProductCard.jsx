@@ -1,8 +1,17 @@
-import { Heart, Eye, Star, Camera } from 'lucide-react';
+import { useState } from 'react';
+import { Heart, Eye, Camera, ShoppingBag, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatINR, calcDiscountPercent } from '../utils/formatters';
 
-export default function ProductCard({ product, onQuickView, onToggleWishlist, isWishlisted = false }) {
+export default function ProductCard({
+  product,
+  onQuickView,
+  onToggleWishlist,
+  onQuickAddToCart,
+  isWishlisted = false,
+}) {
+  const [justAdded, setJustAdded] = useState(false);
+
   const primaryImage =
     product.images?.find((img) => img.is_primary)?.image_url ||
     product.images?.[0]?.image_url ||
@@ -14,6 +23,13 @@ export default function ProductCard({ product, onQuickView, onToggleWishlist, is
   const mainCatName = product.primaryCategory?.parent?.name || product.category || 'Taantira';
   const subCatName = product.primaryCategory?.name || product.subcategory || '';
   const hasRealSales = Number(product.sales_count || 0) > 0;
+
+  const handleCardAdd = async () => {
+    if (!onQuickAddToCart || totalStock <= 0) return;
+    await onQuickAddToCart(product);
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 2200);
+  };
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-[#D9A0A9]/40 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
@@ -74,14 +90,14 @@ export default function ProductCard({ product, onQuickView, onToggleWishlist, is
             <button
               type="button"
               onClick={() => onToggleWishlist(product)}
-              aria-label="Toggle wishlist"
+              aria-label={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
               className={`flex h-9 w-9 items-center justify-center rounded-full border shadow-sm transition ${
                 isWishlisted
-                  ? 'border-[#641B32] bg-[#641B32] text-[#FFF9F2]'
+                  ? 'border-[#641B32] bg-[#641B32] text-[#FFF9F2] ring-2 ring-[#C39A52]/50'
                   : 'border-[#D9A0A9]/60 bg-white/95 text-[#641B32] hover:bg-[#F5E7E8]'
               }`}
             >
-              <Heart className="h-4 w-4" />
+              <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
             </button>
           )}
           {onQuickView && (
@@ -103,10 +119,9 @@ export default function ProductCard({ product, onQuickView, onToggleWishlist, is
             <span className="truncate font-medium uppercase tracking-wider">
               {subCatName || mainCatName}
             </span>
-            {Number(product.rating_avg) > 0 && (
-              <span className="inline-flex shrink-0 items-center gap-1 font-medium text-[#3D1023]">
-                <Star className="h-3.5 w-3.5 fill-[#C39A52] text-[#C39A52]" />
-                {Number(product.rating_avg).toFixed(1)}
+            {isWishlisted && (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#F5E7E8] px-2 py-0.5 text-[10px] font-semibold text-[#641B32]">
+                Saved
               </span>
             )}
           </div>
@@ -122,16 +137,38 @@ export default function ProductCard({ product, onQuickView, onToggleWishlist, is
           </p>
         </div>
 
-        <div className="mt-3 flex items-baseline justify-between gap-2 border-t border-[#F5E7E8] pt-3">
+        <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#F5E7E8] pt-3">
           <div className="flex items-baseline gap-2">
             <span className="text-base font-bold text-[#641B32]">{formatINR(effectivePrice)}</span>
             {discount > 0 && (
               <span className="text-xs text-[#641B32]/50 line-through">{formatINR(product.base_price)}</span>
             )}
           </div>
-          <span className="text-[11px] font-medium text-[#A83F5E]">
-            {availableAngles > 0 ? `${availableAngles}/5 Photos` : '0/5 Photos'}
-          </span>
+          {onQuickAddToCart && totalStock > 0 ? (
+            <button
+              type="button"
+              onClick={handleCardAdd}
+              className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold transition ${
+                justAdded
+                  ? 'bg-emerald-700 text-white'
+                  : 'border border-[#641B32]/30 bg-[#FFF9F2] text-[#641B32] hover:bg-[#641B32] hover:text-[#FFF9F2]'
+              }`}
+            >
+              {justAdded ? (
+                <>
+                  <Check className="h-3 w-3" /> Added
+                </>
+              ) : (
+                <>
+                  <ShoppingBag className="h-3 w-3" /> Add
+                </>
+              )}
+            </button>
+          ) : (
+            <span className="text-[11px] font-medium text-[#A83F5E]">
+              {availableAngles > 0 ? `${availableAngles}/5 Photos` : '0/5 Photos'}
+            </span>
+          )}
         </div>
       </div>
     </div>
