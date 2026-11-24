@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Checkbox, FormControlLabel, TextField, Alert } from "@mui/material";
 import {
@@ -17,6 +17,7 @@ import {
   ShoppingCart,
   Check,
   Heart,
+  RefreshCw,
 } from "lucide-react";
 import api from "../services/api";
 import { useCartStore } from "../store/useCartStore";
@@ -25,10 +26,6 @@ import { useWishlistStore } from "../store/useWishlistStore";
 import { formatINR, calcDiscountPercent } from "../utils/formatters";
 import ProductCard from "../components/ProductCard";
 import SareeImageGallery from "../components/SareeImageGallery";
-import {
-  FALLBACK_PRODUCTS,
-  getMatchingJewellery,
-} from "../utils/fallbackCatalog";
 
 const COLOR_SWATCH_CLASSES = [
   { name: "Wine Burgundy", bg: "bg-[#641B32]" },
@@ -55,6 +52,8 @@ function ProductDetailContent({ slug }) {
   const toggleWishlist = useWishlistStore((s) => s.toggleWishlist);
 
   const [detail, setDetail] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedColor, setSelectedColor] = useState(
     COLOR_SWATCH_CLASSES[0].name,
@@ -80,31 +79,22 @@ function ProductDetailContent({ slug }) {
     wishlistItems.map((entry) => Number(entry.id || entry.product?.id)),
   );
 
-  const buildFallbackDetail = (targetSlug) => {
-    const found =
-      FALLBACK_PRODUCTS.find((p) => p.slug === targetSlug) ||
-      FALLBACK_PRODUCTS[0];
-    const mainSlug =
-      found.primaryCategory?.parent?.slug || found.primaryCategory?.slug;
-    const siblingSarees = FALLBACK_PRODUCTS.filter(
-      (p) =>
-        p.id !== found.id &&
-        (p.primaryCategory?.slug === found.primaryCategory?.slug ||
-          p.primaryCategory?.parent?.slug === mainSlug),
-    ).slice(0, 4);
-    const jewelProduct = FALLBACK_PRODUCTS.find(
-      (p) => p.primaryCategory?.slug === "jewellery",
-    );
-
-    return {
-      product: { ...found },
-      matching_products:
-        jewelProduct && found.primaryCategory?.slug !== "jewellery"
-          ? [jewelProduct]
-          : [],
-      similar_products: siblingSarees,
-    };
-  };
+  const fetchProduct = useCallback(async () => {
+    try {
+      const res = await api.get(`/products/${slug}`);
+      const d = res.data?.data;
+      setDetail(d);
+      setSelectedVariant(d?.product?.variants?.[0] || null);
+      setLoadError("");
+    } catch (err) {
+      setDetail(null);
+      setLoadError(
+        err.response?.data?.message || "Product could not be loaded from database.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [slug]);
 
   useEffect(() => {
     let active = true;
@@ -115,22 +105,65 @@ function ProductDetailContent({ slug }) {
         const d = res.data?.data;
         setDetail(d);
         setSelectedVariant(d?.product?.variants?.[0] || null);
+        setLoadError("");
       })
-      .catch(() => {
+      .catch((err) => {
         if (!active) return;
-        const fallback = buildFallbackDetail(slug);
-        setDetail(fallback);
-        setSelectedVariant(fallback.product.variants?.[0] || null);
+        setDetail(null);
+        setLoadError(
+          err.response?.data?.message || "Product could not be loaded from database.",
+        );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
       });
     return () => {
       active = false;
     };
   }, [slug]);
 
-  if (!detail?.product) {
+  const loadProduct = () => {
+    setLoading(true);
+    setLoadError("");
+    fetchProduct();
+  };
+
+  if (loading) {
     return (
-      <div className="p-12 text-center text-sm text-[#641B32]">
-        Loading saree specifications...
+      <div className="mx-auto max-w-[1440px] px-4 py-12 sm:px-6">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+          <div className="aspect-[3/4] animate-pulse rounded-2xl bg-[#F5E7E8] lg:col-span-5" />
+          <div className="h-96 animate-pulse rounded-2xl bg-[#F5E7E8]/60 lg:col-span-4" />
+          <div className="h-64 animate-pulse rounded-2xl bg-[#F5E7E8]/60 lg:col-span-3" />
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError || !detail?.product) {
+    return (
+      <div className="mx-auto flex max-w-xl flex-col items-center gap-4 px-4 py-16 text-center">
+        <p className="font-serif text-2xl font-bold text-[#3D1023]">
+          Product Unavailable
+        </p>
+        <p className="text-sm text-[#641B32]/85">
+          {loadError || "This saree could not be found in the database."}
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={loadProduct}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#641B32] px-5 py-2.5 text-xs font-semibold text-[#FFF9F2] hover:bg-[#3D1023]"
+          >
+            <RefreshCw className="h-3.5 w-3.5" /> Retry
+          </button>
+          <Link
+            to="/collections/sarees"
+            className="inline-flex items-center rounded-full border border-[#641B32]/30 bg-white px-5 py-2.5 text-xs font-semibold text-[#641B32] hover:bg-[#F5E7E8]"
+          >
+            Browse Sarees
+          </Link>
+        </div>
       </div>
     );
   }
@@ -145,16 +178,9 @@ function ProductDetailContent({ slug }) {
       : { name: product.category || "Sarees", slug: "sarees" });
   const isJewellery = subCategory.slug === "jewellery";
 
-  const matchingJewelleryList =
-    product.matching_jewellery?.length > 0
-      ? product.matching_jewellery
-      : !isJewellery
-        ? getMatchingJewellery(mainCategory.slug)
-        : [];
-
-  const linkedChandbali =
-    (detail.matching_products || [])[0] ||
-    FALLBACK_PRODUCTS.find((p) => p.primaryCategory?.slug === "jewellery");
+  const matchingProductsList = Array.isArray(detail.matching_products)
+    ? detail.matching_products
+    : [];
 
   const baseUnit = Number(
     selectedVariant?.price_override || product.sale_price || product.base_price,
@@ -174,10 +200,17 @@ function ProductDetailContent({ slug }) {
 
   const handleToggleWishlist = async () => {
     setActionErr("");
-    const saved = await toggleWishlist(product);
-    setActionMsg(
-      saved ? "Saved to your Taantira wishlist." : "Removed from wishlist.",
-    );
+    setActionMsg("");
+    try {
+      const saved = await toggleWishlist(product);
+      setActionMsg(
+        saved ? "Saved to your Taantira wishlist." : "Removed from wishlist.",
+      );
+    } catch (err) {
+      setActionErr(
+        err.response?.data?.message || "Unable to update database wishlist.",
+      );
+    }
   };
 
   const handleShare = async () => {
@@ -233,36 +266,40 @@ function ProductDetailContent({ slug }) {
   };
 
   const handleAddMatchingItem = async (item) => {
-    if (item.productSlug) {
-      navigate(`/products/${item.productSlug}`);
+    const variant = item?.variants?.[0];
+    if (!variant) {
+      if (item?.slug) navigate(`/products/${item.slug}`);
       return;
     }
-    if (linkedChandbali?.variants?.[0]) {
-      try {
-        await addItem({
-          product_id: linkedChandbali.id,
-          variant_id: linkedChandbali.variants[0].id,
-          quantity: 1,
-          productPreview: linkedChandbali,
-        });
-        setActionMsg(`Added ${linkedChandbali.name} to your bag.`);
-      } catch {
-        navigate("/collections/jewellery");
-      }
-      return;
+    setActionErr("");
+    try {
+      await addItem({
+        product_id: item.id,
+        variant_id: variant.id,
+        quantity: 1,
+        productPreview: item,
+      });
+      setActionMsg(`Added ${item.name} to your bag.`);
+    } catch (err) {
+      setActionErr(
+        err.response?.data?.message || `Unable to add ${item.name} right now.`,
+      );
     }
-    navigate("/collections/jewellery");
   };
 
   const handleQuickAddRelated = async (relProduct) => {
     const variant = relProduct?.variants?.[0];
     if (!variant) return;
-    await addItem({
-      product_id: relProduct.id,
-      variant_id: variant.id,
-      quantity: 1,
-      productPreview: relProduct,
-    });
+    try {
+      await addItem({
+        product_id: relProduct.id,
+        variant_id: variant.id,
+        quantity: 1,
+        productPreview: relProduct,
+      });
+    } catch {
+      // Toast handled by cart store
+    }
   };
 
   const handlePincodeCheck = async (e) => {
@@ -785,55 +822,72 @@ function ProductDetailContent({ slug }) {
           </div>
 
           <div className="mt-4 flex flex-col gap-3">
-            {(matchingJewelleryList.length > 0
-              ? matchingJewelleryList.slice(0, 3)
-              : [
-                  {
-                    name: "Ruhani Pearl Chandbali",
-                    style: "₹2,990",
-                    image_url: "/assets/products/jewellery-chandbali.jpg",
-                    productSlug: "ruhani-champagne-gold-pearl-chandbali-set",
-                  },
-                ]
-            ).map((item) => (
-              <div
-                key={item.name}
-                className="flex items-center gap-3 rounded-xl border border-[#D9A0A9]/45 bg-white p-2.5 shadow-sm transition hover:border-[#641B32]/50"
-              >
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#D9A0A9]/40 bg-[#FFF9F2] text-[#C39A52]">
-                  {item.image_url ? (
-                    <img
-                      src={item.image_url}
-                      alt={item.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <Gem className="h-5 w-5" />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-bold text-[#3D1023]">
-                    {item.name}
-                  </p>
-                  <p className="truncate text-[11px] text-[#641B32]/80">
-                    {item.style}
-                  </p>
-                  {item.productSlug && (
-                    <p className="mt-0.5 text-xs font-bold text-[#641B32]">
-                      ₹2,990
-                    </p>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleAddMatchingItem(item)}
-                  aria-label={`View or add ${item.name}`}
-                  className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-[#641B32] text-[#FFF9F2] transition hover:bg-[#3D1023]"
+            {matchingProductsList.length > 0 ? (
+              matchingProductsList.slice(0, 3).map((item) => {
+                const jewelImage = item.images?.[0]?.image_url || null;
+                const jewelPrice =
+                  item.variants?.[0]?.price_override ||
+                  item.sale_price ||
+                  item.base_price;
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 rounded-xl border border-[#D9A0A9]/45 bg-white p-2.5 shadow-sm transition hover:border-[#641B32]/50"
+                  >
+                    <Link
+                      to={`/products/${item.slug}`}
+                      className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#D9A0A9]/40 bg-[#FFF9F2] text-[#C39A52]"
+                    >
+                      {jewelImage ? (
+                        <img
+                          src={jewelImage}
+                          alt={item.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <Gem className="h-5 w-5" />
+                      )}
+                    </Link>
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        to={`/products/${item.slug}`}
+                        className="block truncate text-xs font-bold text-[#3D1023] hover:text-[#641B32]"
+                      >
+                        {item.name}
+                      </Link>
+                      <p className="truncate text-[11px] text-[#641B32]/80">
+                        {item.fabric}
+                      </p>
+                      <p className="mt-0.5 text-xs font-bold text-[#641B32]">
+                        {formatINR(jewelPrice)}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleAddMatchingItem(item)}
+                      aria-label={`Add ${item.name} to bag`}
+                      className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-[#641B32] text-[#FFF9F2] transition hover:bg-[#3D1023]"
+                    >
+                      <ShoppingBag className="h-4 w-4" />
+                    </button>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="rounded-xl border border-[#D9A0A9]/45 bg-white p-4 text-center text-xs text-[#641B32]/85">
+                <p>
+                  {isJewellery
+                    ? "Explore curated heritage silk sarees to complete your festive ensemble."
+                    : "Explore live pieces inside our Heritage Jewellery capsule."}
+                </p>
+                <Link
+                  to={isJewellery ? "/collections/sarees" : "/collections/jewellery"}
+                  className="mt-2 inline-block font-semibold text-[#641B32] underline"
                 >
-                  <ShoppingBag className="h-4 w-4" />
-                </button>
+                  {isJewellery ? "Browse Sarees" : "Explore Jewellery"}
+                </Link>
               </div>
-            ))}
+            )}
           </div>
         </aside>
       </div>

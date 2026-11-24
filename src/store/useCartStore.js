@@ -125,24 +125,33 @@ export const useCartStore = create((set, get) => ({
       return { items: nextItems, summary };
     }
 
-    const res = await api.post('/cart/items', { product_id, variant_id, quantity, custom_options });
-    const data = res.data.data;
-    const nextItems = data.items || [];
-    set({ items: nextItems, summary: data.summary || {} });
+    try {
+      const res = await api.post('/cart/items', { product_id, variant_id, quantity, custom_options });
+      const data = res.data.data;
+      const nextItems = data.items || [];
+      set({ items: nextItems, summary: data.summary || {} });
 
-    const addedRecord = nextItems.find((i) => Number(i.product_id) === Number(product_id));
-    const bagCount = nextItems.reduce((sum, i) => sum + Number(i.quantity || 1), 0);
-    useToastStore.getState().showToast({
-      type: 'cart',
-      title: 'Added to Shopping Bag',
-      subtitle: productPreview?.name || addedRecord?.product?.name || 'Taantira Handloom Creation',
-      imageUrl: productPreview?.images?.[0]?.image_url || addedRecord?.product?.images?.[0]?.image_url || null,
-      badgeText: `Cart: ${bagCount}`,
-      actionLabel: 'View Cart',
-      actionTo: '/cart',
-    });
+      const addedRecord = nextItems.find((i) => Number(i.product_id) === Number(product_id));
+      const bagCount = nextItems.reduce((sum, i) => sum + Number(i.quantity || 1), 0);
+      useToastStore.getState().showToast({
+        type: 'cart',
+        title: 'Added to Shopping Bag',
+        subtitle: productPreview?.name || addedRecord?.product?.name || 'Taantira Handloom Creation',
+        imageUrl: productPreview?.images?.[0]?.image_url || addedRecord?.product?.images?.[0]?.image_url || null,
+        badgeText: `Cart: ${bagCount}`,
+        actionLabel: 'View Cart',
+        actionTo: '/cart',
+      });
 
-    return data;
+      return data;
+    } catch (err) {
+      useToastStore.getState().showToast({
+        type: 'error',
+        title: 'Could Not Add to Bag',
+        subtitle: err.response?.data?.message || 'Unable to save item to your database bag.',
+      });
+      throw err;
+    }
   },
 
   updateQty: async (itemId, quantity) => {
@@ -215,6 +224,7 @@ export const useCartStore = create((set, get) => ({
     if (!getAuthToken()) return;
     const guestItems = readGuestCart();
     if (guestItems.length > 0) {
+      const remaining = [];
       for (const item of guestItems) {
         try {
           await api.post('/cart/items', {
@@ -224,10 +234,10 @@ export const useCartStore = create((set, get) => ({
             custom_options: item.custom_options || null,
           });
         } catch {
-          // Ignore invalid guest items
+          remaining.push(item);
         }
       }
-      writeGuestCart([]);
+      writeGuestCart(remaining);
     }
     await get().fetchCart();
   },

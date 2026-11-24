@@ -14,7 +14,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
-import { buildGalleryAngles } from '../utils/fallbackCatalog';
+import { buildGalleryAngles } from '../utils/galleryAngles';
 
 const ZOOM_STEPS = [1, 1.5, 2, 2.5, 3];
 const ZOOM_PRESETS = [

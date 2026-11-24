@@ -41,10 +41,9 @@ export const useWishlistStore = create((set, get) => ({
       }));
       set({ items: serverItems, loading: false });
       return serverItems;
-    } catch {
-      const localItems = readGuestWishlist();
-      set({ items: localItems, loading: false });
-      return localItems;
+    } catch (err) {
+      set({ loading: false });
+      throw err;
     }
   },
 
@@ -56,64 +55,83 @@ export const useWishlistStore = create((set, get) => ({
   toggleWishlist: async (product) => {
     if (!product?.id) return false;
     const targetId = Number(product.id);
+    const previousItems = get().items;
     const currentlySaved = get().isWishlisted(targetId);
     const token = getAuthToken();
 
     let nextItems;
     if (currentlySaved) {
-      nextItems = get().items.filter((entry) => Number(entry.id || entry.product?.id) !== targetId);
+      nextItems = previousItems.filter((entry) => Number(entry.id || entry.product?.id) !== targetId);
     } else {
-      nextItems = [...get().items, { id: targetId, product }];
+      nextItems = [...previousItems, { id: targetId, product }];
     }
 
     set({ items: nextItems });
+
     if (!token) {
       writeGuestWishlist(nextItems);
+      const finalSaved = !currentlySaved;
+      useToastStore.getState().showToast({
+        type: 'wishlist',
+        title: finalSaved ? 'Saved to Wishlist' : 'Removed from Wishlist',
+        subtitle: product.name,
+        imageUrl: product.images?.[0]?.image_url || null,
+        badgeText: `Wishlist: ${nextItems.length}`,
+        actionLabel: 'View Wishlist',
+        actionTo: '/wishlist',
+      });
+      return finalSaved;
     }
 
-    let finalSaved = !currentlySaved;
-    if (token) {
-      try {
-        const res = await api.post('/users/wishlist/toggle', { product_id: targetId });
-        finalSaved = Boolean(res.data?.data?.wishlisted);
-        await get().fetchWishlist();
-      } catch {
-        // Keep optimistic local fallback state
-      }
+    try {
+      const res = await api.post('/users/wishlist/toggle', {
+        product_id: targetId,
+        variant_id: product.variants?.[0]?.id || null,
+      });
+      const finalSaved = Boolean(res.data?.data?.wishlisted);
+      const refreshedItems = await get().fetchWishlist();
+      useToastStore.getState().showToast({
+        type: 'wishlist',
+        title: finalSaved ? 'Saved to Wishlist' : 'Removed from Wishlist',
+        subtitle: product.name,
+        imageUrl: product.images?.[0]?.image_url || null,
+        badgeText: `Wishlist: ${refreshedItems.length}`,
+        actionLabel: 'View Wishlist',
+        actionTo: '/account/wishlist',
+      });
+      return finalSaved;
+    } catch (err) {
+      set({ items: previousItems });
+      useToastStore.getState().showToast({
+        type: 'error',
+        title: 'Could Not Save Wishlist',
+        subtitle: err.response?.data?.message || 'Unable to update your database wishlist. Please try again.',
+      });
+      throw err;
     }
-
-    const totalSaved = get().items.length;
-    useToastStore.getState().showToast({
-      type: 'wishlist',
-      title: finalSaved ? 'Saved to Wishlist' : 'Removed from Wishlist',
-      subtitle: product.name,
-      imageUrl: product.images?.[0]?.image_url || null,
-      badgeText: `Wishlist: ${totalSaved}`,
-      actionLabel: 'View Wishlist',
-      actionTo: token ? '/account/wishlist' : '/wishlist',
-    });
-
-    return finalSaved;
   },
 
   syncGuestWishlistToServer: async () => {
     if (!getAuthToken()) return;
     const guestItems = readGuestWishlist();
     if (guestItems.length > 0) {
+      const existingServer = await get().fetchWishlist().catch(() => []);
+      const existingIds = new Set(existingServer.map((entry) => Number(entry.id || entry.product?.id)));
+      const remaining = [];
       for (const entry of guestItems) {
         const pid = Number(entry.id || entry.product?.id);
-        if (!pid) continue;
+        if (!pid || existingIds.has(pid)) continue;
         try {
-          const res = await api.post('/users/wishlist/toggle', { product_id: pid });
-          if (!res.data?.data?.wishlisted) {
-            await api.post('/users/wishlist/toggle', { product_id: pid });
-          }
+          await api.post('/users/wishlist/toggle', {
+            product_id: pid,
+            variant_id: entry.product?.variants?.[0]?.id || null,
+          });
         } catch {
-          // Ignore sync failures for stale entries
+          remaining.push(entry);
         }
       }
-      writeGuestWishlist([]);
+      writeGuestWishlist(remaining);
     }
-    await get().fetchWishlist();
+    await get().fetchWishlist().catch(() => []);
   },
 }));

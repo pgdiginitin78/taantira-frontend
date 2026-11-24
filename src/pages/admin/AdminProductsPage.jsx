@@ -8,7 +8,7 @@ import { Camera, ExternalLink, Pencil, PlusCircle, ShieldAlert, Trash2, Upload }
 import api, { API_ORIGIN } from '../../services/api';
 import DataTable from '../../components/DataTable';
 import { formatINR } from '../../utils/formatters';
-import { REQUIRED_IMAGE_ANGLES } from '../../data/sareeCatalogueData';
+import { REQUIRED_IMAGE_ANGLES } from '../../utils/galleryAngles';
 
 const productStudioSchema = yup.object({
   name: yup.string().trim().min(3, 'Minimum 3 characters').max(200).required('Product name is required'),

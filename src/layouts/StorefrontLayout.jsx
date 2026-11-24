@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import {
+  AlertCircle,
   Search,
   ShoppingBag,
   Heart,
@@ -21,11 +22,6 @@ import { useAuthStore } from "../store/useAuthStore";
 import { useCartStore } from "../store/useCartStore";
 import { useWishlistStore } from "../store/useWishlistStore";
 import { useToastStore } from "../store/useToastStore";
-import { MAIN_CATEGORIES } from "../data/sareeCatalogueData";
-import {
-  FALLBACK_CATEGORIES,
-  filterFallbackProducts,
-} from "../utils/fallbackCatalog";
 
 const newsletterSchema = yup.object({
   email: yup
@@ -36,13 +32,9 @@ const newsletterSchema = yup.object({
     .required("Email is required"),
 });
 
-const SUBCATEGORIES_BY_MAIN = Object.fromEntries(
-  MAIN_CATEGORIES.map((m) => [m.slug, m.subcategories]),
-);
-
 const STORE_NAV_LINKS = [
   { to: "/collections/new-arrivals", label: "NEW ARRIVALS", mainSlug: null },
-  { to: "/collections/sarees", label: "ALL SAREES (90%)", mainSlug: null },
+  { to: "/collections/sarees", label: "ALL SAREES", mainSlug: null },
   {
     to: "/collections/banarasi-sarees",
     label: "BANARASI",
@@ -89,6 +81,7 @@ export default function StorefrontLayout() {
   const fetchWishlist = useWishlistStore((s) => s.fetchWishlist);
   const { toasts, dismissToast } = useToastStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [subcategoriesByMain, setSubcategoriesByMain] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState({
     products: [],
@@ -108,16 +101,26 @@ export default function StorefrontLayout() {
   } = useForm({ resolver: yupResolver(newsletterSchema) });
 
   useEffect(() => {
-    fetchCart();
-    fetchWishlist();
+    fetchCart().catch(() => {});
+    fetchWishlist().catch(() => {});
   }, [isAuthenticated, fetchCart, fetchWishlist]);
 
   useEffect(() => {
     api
       .get("/products/homepage")
       .then((res) => {
-        const bar = res.data?.data?.promotional_bar;
+        const d = res.data?.data;
+        const bar = d?.promotional_bar;
         if (bar?.message) setPromoText(bar.message);
+        if (Array.isArray(d?.categories)) {
+          const grouped = {};
+          for (const cat of d.categories) {
+            if (!cat.parent_id && cat.slug) {
+              grouped[cat.slug] = cat.children || [];
+            }
+          }
+          setSubcategoriesByMain(grouped);
+        }
       })
       .catch(() => {});
   }, []);
@@ -135,19 +138,7 @@ export default function StorefrontLayout() {
           setShowSuggestions(true);
         })
         .catch(() => {
-          const fallbackMatches = filterFallbackProducts({
-            slug: "all",
-            q: trimmed,
-            limit: 6,
-          });
-          const matchedCats = FALLBACK_CATEGORIES.filter((c) =>
-            c.name.toLowerCase().includes(trimmed.toLowerCase()),
-          );
-          setSuggestions({
-            products: fallbackMatches.products,
-            categories: matchedCats,
-          });
-          setShowSuggestions(true);
+          setSuggestions({ products: [], categories: [] });
         });
     }, 250);
     return () => clearTimeout(timer);
@@ -208,12 +199,16 @@ export default function StorefrontLayout() {
               ) : (
                 <div
                   className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-                    toast.type === "wishlist"
-                      ? "bg-[#F5E7E8] text-[#641B32]"
-                      : "bg-emerald-50 text-emerald-700"
+                    toast.type === "error"
+                      ? "bg-rose-50 text-rose-700"
+                      : toast.type === "wishlist"
+                        ? "bg-[#F5E7E8] text-[#641B32]"
+                        : "bg-emerald-50 text-emerald-700"
                   }`}
                 >
-                  {toast.type === "wishlist" ? (
+                  {toast.type === "error" ? (
+                    <AlertCircle className="h-5 w-5" />
+                  ) : toast.type === "wishlist" ? (
                     <Heart className="h-5 w-5 fill-[#641B32] text-[#641B32]" />
                   ) : (
                     <CheckCircle2 className="h-5 w-5" />
@@ -471,7 +466,7 @@ export default function StorefrontLayout() {
           <div className="mx-auto flex max-w-[1440px] items-center justify-center gap-5 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#3D1023] xl:gap-6">
             {STORE_NAV_LINKS.map((item) => {
               const subs = item.mainSlug
-                ? SUBCATEGORIES_BY_MAIN[item.mainSlug] || []
+                ? subcategoriesByMain[item.mainSlug] || []
                 : [];
               return (
                 <div key={item.to} className="group relative">

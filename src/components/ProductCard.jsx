@@ -26,9 +26,13 @@ export default function ProductCard({
 
   const handleCardAdd = async () => {
     if (!onQuickAddToCart || totalStock <= 0) return;
-    await onQuickAddToCart(product);
-    setJustAdded(true);
-    setTimeout(() => setJustAdded(false), 2200);
+    try {
+      await onQuickAddToCart(product);
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), 2200);
+    } catch {
+      // Toast error handled by store
+    }
   };
 
   return (
@@ -89,7 +93,9 @@ export default function ProductCard({
           {onToggleWishlist && (
             <button
               type="button"
-              onClick={() => onToggleWishlist(product)}
+              onClick={() => {
+                Promise.resolve(onToggleWishlist(product)).catch(() => {});
+              }}
               aria-label={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
               className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border shadow-sm transition ${
                 isWishlisted

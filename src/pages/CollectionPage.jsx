@@ -9,18 +9,12 @@ import {
   Drawer,
   TextField,
 } from "@mui/material";
-import { SlidersHorizontal, X, Search, RotateCcw } from "lucide-react";
+import { SlidersHorizontal, X, Search, RotateCcw, RefreshCw } from "lucide-react";
 import api from "../services/api";
 import ProductCard from "../components/ProductCard";
 import QuickViewModal from "../components/QuickViewModal";
 import { useWishlistStore } from "../store/useWishlistStore";
 import { useCartStore } from "../store/useCartStore";
-import {
-  FALLBACK_CATEGORIES,
-  FALLBACK_COLLECTIONS,
-  filterFallbackProducts,
-  getFallbackFacets,
-} from "../utils/fallbackCatalog";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Curated Order" },
@@ -46,9 +40,14 @@ export default function CollectionPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [banner, setBanner] = useState(null);
-  const [facets, setFacets] = useState(getFallbackFacets);
+  const [facets, setFacets] = useState({
+    categories: [],
+    subcategories: [],
+    fabrics: [],
+  });
   const [meta, setMeta] = useState({ total: 0, page: 1, totalPages: 1 });
   const [loadedKey, setLoadedKey] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
@@ -66,7 +65,7 @@ export default function CollectionPage() {
   const handleQuickAddToCart = async (product) => {
     const variant = product?.variants?.[0];
     if (!variant) return;
-    await addItem({
+    return addItem({
       product_id: product.id,
       variant_id: variant.id,
       quantity: 1,
@@ -129,10 +128,10 @@ export default function CollectionPage() {
   const requestKey = `${slug}|${selectedCategories.join(",")}|${selectedSubcategories.join(",")}|${selectedFabrics.join(",")}|${queryTerm}|${sortOption.value}|${page}`;
   const loading = loadedKey !== requestKey;
 
-  useEffect(() => {
-    let active = true;
-    api
-      .get("/products", {
+  const fetchCollection = useCallback(async () => {
+    setLoadError("");
+    try {
+      const res = await api.get("/products", {
         params: {
           collection: slug,
           categories: selectedCategories.length
@@ -149,62 +148,22 @@ export default function CollectionPage() {
           page,
           limit: 24,
         },
-      })
-      .then((res) => {
-        if (!active) return;
-        const d = res.data?.data;
-        setProducts(d?.products || []);
-        setBanner(d?.banner || null);
-        if (d?.facets?.categories) setFacets(d.facets);
-        setMeta(res.data?.meta || { total: 0, page: 1, totalPages: 1 });
-        setLoadedKey(requestKey);
-      })
-      .catch(() => {
-        if (!active) return;
-        const matchedCat =
-          FALLBACK_CATEGORIES.find((c) => c.slug === slug) ||
-          FALLBACK_CATEGORIES.flatMap((c) => c.children || []).find(
-            (s) => s.slug === slug,
-          );
-        const matchedCol = FALLBACK_COLLECTIONS.find((c) => c.slug === slug);
-        setBanner(matchedCat || matchedCol || null);
-
-        const result = filterFallbackProducts({
-          slug,
-          categories: selectedCategories,
-          subcategories: selectedSubcategories,
-          fabrics: selectedFabrics,
-          q: queryTerm,
-          page,
-          limit: 24,
-        });
-
-        let sortedProducts = [...result.products];
-        if (sortOption.value === "price_asc") {
-          sortedProducts.sort(
-            (a, b) =>
-              Number(a.sale_price ?? a.base_price) -
-              Number(b.sale_price ?? b.base_price),
-          );
-        } else if (sortOption.value === "price_desc") {
-          sortedProducts.sort(
-            (a, b) =>
-              Number(b.sale_price ?? b.base_price) -
-              Number(a.sale_price ?? a.base_price),
-          );
-        } else if (sortOption.value === "name_asc") {
-          sortedProducts.sort((a, b) => a.name.localeCompare(b.name));
-        }
-
-        setProducts(sortedProducts);
-        setFacets(result.facets);
-        setMeta(result.pagination);
-        setLoadedKey(requestKey);
       });
-
-    return () => {
-      active = false;
-    };
+      const d = res.data?.data;
+      setProducts(d?.products || []);
+      setBanner(d?.banner || null);
+      if (d?.facets?.categories) setFacets(d.facets);
+      setMeta(res.data?.meta || { total: 0, page: 1, totalPages: 1 });
+      setLoadedKey(requestKey);
+    } catch (err) {
+      setLoadError(
+        err.response?.data?.message ||
+          "Unable to load collection from database.",
+      );
+      setProducts([]);
+      setMeta({ total: 0, page: 1, totalPages: 1 });
+      setLoadedKey(requestKey);
+    }
   }, [
     requestKey,
     slug,
@@ -216,8 +175,20 @@ export default function CollectionPage() {
     page,
   ]);
 
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      if (!active) return;
+      await fetchCollection();
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, [fetchCollection]);
+
   // Subcategories filtered intelligently based on selected categories (or active collection route if it is a main category)
-  const routeMainCat = FALLBACK_CATEGORIES.some(
+  const routeMainCat = (facets.categories || []).some(
     (c) => c.slug === slug && slug !== "jewellery",
   )
     ? slug
@@ -611,6 +582,19 @@ export default function CollectionPage() {
                 />
               ))}
             </div>
+          ) : loadError ? (
+            <div className="flex flex-col items-center gap-4 rounded-2xl border border-[#D9A0A9]/50 bg-white p-12 text-center">
+              <p className="text-base font-semibold text-[#3D1023]">
+                {loadError}
+              </p>
+              <button
+                type="button"
+                onClick={fetchCollection}
+                className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#641B32] px-5 py-2.5 text-xs font-semibold text-[#FFF9F2] hover:bg-[#3D1023]"
+              >
+                <RefreshCw className="h-3.5 w-3.5" /> Retry Database Load
+              </button>
+            </div>
           ) : products.length === 0 ? (
             <div className="flex flex-col items-center gap-4 rounded-2xl border border-[#D9A0A9]/50 bg-white p-12 text-center">
               <p className="text-base font-semibold text-[#3D1023]">
@@ -635,7 +619,9 @@ export default function CollectionPage() {
                   key={product.id}
                   product={product}
                   onQuickView={setQuickViewProduct}
-                  onToggleWishlist={toggleWishlist}
+                  onToggleWishlist={(item) =>
+                    Promise.resolve(toggleWishlist(item)).catch(() => {})
+                  }
                   onQuickAddToCart={handleQuickAddToCart}
                   isWishlisted={wishlistedIds.has(Number(product.id))}
                 />
