@@ -1,11 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import {
-  Checkbox,
-  FormControlLabel,
-  TextField,
-  Alert,
-} from '@mui/material';
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { Checkbox, FormControlLabel, TextField, Alert } from "@mui/material";
 import {
   ShoppingBag,
   Zap,
@@ -22,29 +17,29 @@ import {
   ShoppingCart,
   Check,
   Heart,
-} from 'lucide-react';
-import api from '../services/api';
-import { useCartStore } from '../store/useCartStore';
-import { useAuthStore } from '../store/useAuthStore';
-import { useWishlistStore } from '../store/useWishlistStore';
-import { formatINR, calcDiscountPercent } from '../utils/formatters';
-import ProductCard from '../components/ProductCard';
-import SareeImageGallery from '../components/SareeImageGallery';
+} from "lucide-react";
+import api from "../services/api";
+import { useCartStore } from "../store/useCartStore";
+import { useAuthStore } from "../store/useAuthStore";
+import { useWishlistStore } from "../store/useWishlistStore";
+import { formatINR, calcDiscountPercent } from "../utils/formatters";
+import ProductCard from "../components/ProductCard";
+import SareeImageGallery from "../components/SareeImageGallery";
 import {
   FALLBACK_PRODUCTS,
   getMatchingJewellery,
-} from '../utils/fallbackCatalog';
+} from "../utils/fallbackCatalog";
 
 const COLOR_SWATCH_CLASSES = [
-  { name: 'Wine Burgundy', bg: 'bg-[#641B32]' },
-  { name: 'Dark Maroon', bg: 'bg-[#8A2343]' },
-  { name: 'Royal Crimson', bg: 'bg-[#B31B34]' },
-  { name: 'Berry Rose', bg: 'bg-[#C96B84]' },
-  { name: 'Dusty Blush', bg: 'bg-[#EEB9BE]' },
-  { name: 'Warm Ivory', bg: 'bg-[#EFE0C8]' },
-  { name: 'Antique Gold', bg: 'bg-[#C39A52]' },
-  { name: 'Emerald Green', bg: 'bg-[#125236]' },
-  { name: 'Midnight Indigo', bg: 'bg-[#1F2D4D]' },
+  { name: "Wine Burgundy", bg: "bg-[#641B32]" },
+  { name: "Dark Maroon", bg: "bg-[#8A2343]" },
+  { name: "Royal Crimson", bg: "bg-[#B31B34]" },
+  { name: "Berry Rose", bg: "bg-[#C96B84]" },
+  { name: "Dusty Blush", bg: "bg-[#EEB9BE]" },
+  { name: "Warm Ivory", bg: "bg-[#EFE0C8]" },
+  { name: "Antique Gold", bg: "bg-[#C39A52]" },
+  { name: "Emerald Green", bg: "bg-[#125236]" },
+  { name: "Midnight Indigo", bg: "bg-[#1F2D4D]" },
 ];
 
 export default function ProductDetailPage() {
@@ -61,40 +56,52 @@ function ProductDetailContent({ slug }) {
 
   const [detail, setDetail] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
-  const [selectedColor, setSelectedColor] = useState(COLOR_SWATCH_CLASSES[0].name);
+  const [selectedColor, setSelectedColor] = useState(
+    COLOR_SWATCH_CLASSES[0].name,
+  );
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState('details');
+  const [activeTab, setActiveTab] = useState("details");
   const [justAddedCart, setJustAddedCart] = useState(false);
 
   const [matchingBlouse, setMatchingBlouse] = useState(false);
-  const [blouseNotes, setBlouseNotes] = useState('');
+  const [blouseNotes, setBlouseNotes] = useState("");
   const [petticoat, setPetticoat] = useState(false);
   const [giftWrap, setGiftWrap] = useState(false);
   const [giftBox, setGiftBox] = useState(false);
 
-  const [pincode, setPincode] = useState('');
+  const [pincode, setPincode] = useState("");
   const [pincodeInfo, setPincodeInfo] = useState(null);
-  const [pincodeErr, setPincodeErr] = useState('');
+  const [pincodeErr, setPincodeErr] = useState("");
 
-  const [actionMsg, setActionMsg] = useState('');
-  const [actionErr, setActionErr] = useState('');
+  const [actionMsg, setActionMsg] = useState("");
+  const [actionErr, setActionErr] = useState("");
 
-  const wishlistedIds = new Set(wishlistItems.map((entry) => Number(entry.id || entry.product?.id)));
+  const wishlistedIds = new Set(
+    wishlistItems.map((entry) => Number(entry.id || entry.product?.id)),
+  );
 
   const buildFallbackDetail = (targetSlug) => {
-    const found = FALLBACK_PRODUCTS.find((p) => p.slug === targetSlug) || FALLBACK_PRODUCTS[0];
-    const mainSlug = found.primaryCategory?.parent?.slug || found.primaryCategory?.slug;
+    const found =
+      FALLBACK_PRODUCTS.find((p) => p.slug === targetSlug) ||
+      FALLBACK_PRODUCTS[0];
+    const mainSlug =
+      found.primaryCategory?.parent?.slug || found.primaryCategory?.slug;
     const siblingSarees = FALLBACK_PRODUCTS.filter(
       (p) =>
         p.id !== found.id &&
         (p.primaryCategory?.slug === found.primaryCategory?.slug ||
-          p.primaryCategory?.parent?.slug === mainSlug)
+          p.primaryCategory?.parent?.slug === mainSlug),
     ).slice(0, 4);
-    const jewelProduct = FALLBACK_PRODUCTS.find((p) => p.primaryCategory?.slug === 'jewellery');
+    const jewelProduct = FALLBACK_PRODUCTS.find(
+      (p) => p.primaryCategory?.slug === "jewellery",
+    );
 
     return {
       product: { ...found },
-      matching_products: jewelProduct && found.primaryCategory?.slug !== 'jewellery' ? [jewelProduct] : [],
+      matching_products:
+        jewelProduct && found.primaryCategory?.slug !== "jewellery"
+          ? [jewelProduct]
+          : [],
       similar_products: siblingSarees,
     };
   };
@@ -121,7 +128,11 @@ function ProductDetailContent({ slug }) {
   }, [slug]);
 
   if (!detail?.product) {
-    return <div className="p-12 text-center text-sm text-[#641B32]">Loading saree specifications...</div>;
+    return (
+      <div className="p-12 text-center text-sm text-[#641B32]">
+        Loading saree specifications...
+      </div>
+    );
   }
 
   const product = detail.product;
@@ -129,21 +140,25 @@ function ProductDetailContent({ slug }) {
   const subCategory = product.primaryCategory || {};
   const mainCategory =
     subCategory.parent ||
-    (subCategory.slug === 'jewellery'
+    (subCategory.slug === "jewellery"
       ? subCategory
-      : { name: product.category || 'Sarees', slug: 'sarees' });
-  const isJewellery = subCategory.slug === 'jewellery';
+      : { name: product.category || "Sarees", slug: "sarees" });
+  const isJewellery = subCategory.slug === "jewellery";
 
   const matchingJewelleryList =
     product.matching_jewellery?.length > 0
       ? product.matching_jewellery
       : !isJewellery
-      ? getMatchingJewellery(mainCategory.slug)
-      : [];
+        ? getMatchingJewellery(mainCategory.slug)
+        : [];
 
-  const linkedChandbali = (detail.matching_products || [])[0] || FALLBACK_PRODUCTS.find((p) => p.primaryCategory?.slug === 'jewellery');
+  const linkedChandbali =
+    (detail.matching_products || [])[0] ||
+    FALLBACK_PRODUCTS.find((p) => p.primaryCategory?.slug === "jewellery");
 
-  const baseUnit = Number(selectedVariant?.price_override || product.sale_price || product.base_price);
+  const baseUnit = Number(
+    selectedVariant?.price_override || product.sale_price || product.base_price,
+  );
   const addonCost =
     (subCategory.supports_blouse_option && matchingBlouse ? 1200 : 0) +
     (subCategory.supports_petticoat_option && petticoat ? 650 : 0) +
@@ -152,28 +167,31 @@ function ProductDetailContent({ slug }) {
   const effectiveUnit = baseUnit + addonCost;
   const discount = calcDiscountPercent(product.base_price, product.sale_price);
   const availableStock = selectedVariant
-    ? Number(selectedVariant.stock_qty) - Number(selectedVariant.reserved_qty || 0)
+    ? Number(selectedVariant.stock_qty) -
+      Number(selectedVariant.reserved_qty || 0)
     : 0;
   const hasRealSales = Number(product.sales_count || 0) > 0;
 
   const handleToggleWishlist = async () => {
-    setActionErr('');
+    setActionErr("");
     const saved = await toggleWishlist(product);
-    setActionMsg(saved ? 'Saved to your Taantira wishlist.' : 'Removed from wishlist.');
+    setActionMsg(
+      saved ? "Saved to your Taantira wishlist." : "Removed from wishlist.",
+    );
   };
 
   const handleShare = async () => {
     try {
       await navigator.clipboard?.writeText(window.location.href);
-      setActionMsg('Product link copied to clipboard.');
+      setActionMsg("Product link copied to clipboard.");
     } catch {
-      setActionMsg('Copy URL from your address bar to share.');
+      setActionMsg("Copy URL from your address bar to share.");
     }
   };
 
   const handleBagAction = async (buyNow = false) => {
-    setActionErr('');
-    setActionMsg('');
+    setActionErr("");
+    setActionMsg("");
     if (!selectedVariant) return;
     try {
       await addItem({
@@ -182,27 +200,35 @@ function ProductDetailContent({ slug }) {
         quantity,
         productPreview: product,
         custom_options: {
-          matching_blouse: subCategory.supports_blouse_option ? matchingBlouse : false,
-          blouse_stitching_notes: subCategory.supports_blouse_option ? blouseNotes || null : null,
+          matching_blouse: subCategory.supports_blouse_option
+            ? matchingBlouse
+            : false,
+          blouse_stitching_notes: subCategory.supports_blouse_option
+            ? blouseNotes || null
+            : null,
           petticoat: subCategory.supports_petticoat_option ? petticoat : false,
-          gift_wrap: subCategory.supports_gift_options !== false ? giftWrap : false,
-          gift_box: subCategory.supports_gift_options !== false ? giftBox : false,
-          customisation_notes: selectedColor ? `Preferred Shade: ${selectedColor}` : null,
+          gift_wrap:
+            subCategory.supports_gift_options !== false ? giftWrap : false,
+          gift_box:
+            subCategory.supports_gift_options !== false ? giftBox : false,
+          customisation_notes: selectedColor
+            ? `Preferred Shade: ${selectedColor}`
+            : null,
         },
       });
       if (buyNow) {
         if (isAuthenticated) {
-          navigate('/checkout');
+          navigate("/checkout");
         } else {
-          navigate('/login', { state: { from: '/checkout' } });
+          navigate("/login", { state: { from: "/checkout" } });
         }
       } else {
         setJustAddedCart(true);
-        setActionMsg('Added to your shopping bag.');
+        setActionMsg("Added to your shopping bag.");
         setTimeout(() => setJustAddedCart(false), 2400);
       }
     } catch (err) {
-      setActionErr(err.response?.data?.message || 'Unable to add item.');
+      setActionErr(err.response?.data?.message || "Unable to add item.");
     }
   };
 
@@ -221,11 +247,11 @@ function ProductDetailContent({ slug }) {
         });
         setActionMsg(`Added ${linkedChandbali.name} to your bag.`);
       } catch {
-        navigate('/collections/jewellery');
+        navigate("/collections/jewellery");
       }
       return;
     }
-    navigate('/collections/jewellery');
+    navigate("/collections/jewellery");
   };
 
   const handleQuickAddRelated = async (relProduct) => {
@@ -241,10 +267,10 @@ function ProductDetailContent({ slug }) {
 
   const handlePincodeCheck = async (e) => {
     e.preventDefault();
-    setPincodeErr('');
+    setPincodeErr("");
     const trimmed = pincode.trim();
     if (!/^\d{6}$/.test(trimmed)) {
-      setPincodeErr('Enter a valid 6-digit Indian PIN code.');
+      setPincodeErr("Enter a valid 6-digit Indian PIN code.");
       setPincodeInfo(null);
       return;
     }
@@ -252,12 +278,16 @@ function ProductDetailContent({ slug }) {
       const res = await api.get(`/checkout/pincode/${trimmed}`);
       setPincodeInfo(res.data?.data);
     } catch {
-      const metro = ['400001', '400050', '400051', '560001', '110001'].includes(trimmed);
+      const metro = ["400001", "400050", "400051", "560001", "110001"].includes(
+        trimmed,
+      );
       setPincodeInfo({
         pincode: trimmed,
         serviceable: true,
         cod_available: true,
-        zone_name: metro ? 'Taantira Express Atelier Zone' : 'Insured Pan-India Handloom Courier',
+        zone_name: metro
+          ? "Taantira Express Atelier Zone"
+          : "Insured Pan-India Handloom Courier",
         estimated_hours: metro ? 24 : 96,
       });
     }
@@ -266,34 +296,48 @@ function ProductDetailContent({ slug }) {
   return (
     <div className="mx-auto max-w-[1440px] space-y-12 px-4 py-5 sm:px-6">
       {/* Breadcrumb Bar matching exact reference hierarchy */}
-      <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1.5 text-xs text-[#641B32]/75">
-        <Link to="/" className="inline-flex items-center gap-1 hover:text-[#641B32] hover:underline">
+      <nav
+        aria-label="Breadcrumb"
+        className="flex flex-wrap items-center gap-1.5 text-xs text-[#641B32]/75"
+      >
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1 hover:text-[#641B32] hover:underline"
+        >
           <Home className="h-3.5 w-3.5" />
           <span>Home</span>
         </Link>
         <ChevronRight className="h-3.5 w-3.5 text-[#D9A0A9]" />
-        <Link to={isJewellery ? '/collections/jewellery' : '/collections/sarees'} className="hover:text-[#641B32] hover:underline">
-          {isJewellery ? 'Saree Jewellery' : 'Sarees'}
+        <Link
+          to={isJewellery ? "/collections/jewellery" : "/collections/sarees"}
+          className="hover:text-[#641B32] hover:underline"
+        >
+          {isJewellery ? "Saree Jewellery" : "Sarees"}
         </Link>
         {!isJewellery && mainCategory?.name && (
           <>
             <ChevronRight className="h-3.5 w-3.5 text-[#D9A0A9]" />
-            <Link to={`/collections/${mainCategory.slug}`} className="hover:text-[#641B32] hover:underline">
+            <Link
+              to={`/collections/${mainCategory.slug}`}
+              className="hover:text-[#641B32] hover:underline"
+            >
               {mainCategory.name}
             </Link>
           </>
         )}
-        {!isJewellery && subCategory?.name && subCategory.name !== mainCategory?.name && (
-          <>
-            <ChevronRight className="h-3.5 w-3.5 text-[#D9A0A9]" />
-            <Link
-              to={`/collections/${mainCategory.slug}?subcategories=${encodeURIComponent(subCategory.slug)}`}
-              className="hover:text-[#641B32] hover:underline"
-            >
-              {subCategory.name}
-            </Link>
-          </>
-        )}
+        {!isJewellery &&
+          subCategory?.name &&
+          subCategory.name !== mainCategory?.name && (
+            <>
+              <ChevronRight className="h-3.5 w-3.5 text-[#D9A0A9]" />
+              <Link
+                to={`/collections/${mainCategory.slug}?subcategories=${encodeURIComponent(subCategory.slug)}`}
+                className="hover:text-[#641B32] hover:underline"
+              >
+                {subCategory.name}
+              </Link>
+            </>
+          )}
         <ChevronRight className="h-3.5 w-3.5 text-[#D9A0A9]" />
         <span className="font-semibold text-[#3D1023]">{product.name}</span>
       </nav>
@@ -319,7 +363,8 @@ function ProductDetailContent({ slug }) {
             </span>
           ) : (
             <span className="inline-flex w-fit items-center gap-1 rounded-full bg-[#F7E8D0] px-3 py-1 text-xs font-semibold text-[#8A5A12]">
-              <Sparkles className="h-3.5 w-3.5 text-[#C39A52]" /> Handloom Heritage
+              <Sparkles className="h-3.5 w-3.5 text-[#C39A52]" /> Handloom
+              Heritage
             </span>
           )}
 
@@ -328,16 +373,23 @@ function ProductDetailContent({ slug }) {
               {product.name}
             </h1>
             <p className="mt-1 text-xs text-[#641B32]/80">
-              {mainCategory.name} &nbsp;|&nbsp; Fabric: <span className="font-medium text-[#3D1023]">{product.fabric}</span>
+              {mainCategory.name} &nbsp;|&nbsp; Fabric:{" "}
+              <span className="font-medium text-[#3D1023]">
+                {product.fabric}
+              </span>
             </p>
           </div>
 
           {/* Price Row */}
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-3xl font-bold text-[#641B32]">{formatINR(effectiveUnit)}</span>
+            <span className="text-3xl font-bold text-[#641B32]">
+              {formatINR(effectiveUnit)}
+            </span>
             {discount > 0 && (
               <>
-                <span className="text-base text-[#641B32]/45 line-through">{formatINR(product.base_price)}</span>
+                <span className="text-base text-[#641B32]/45 line-through">
+                  {formatINR(product.base_price)}
+                </span>
                 <span className="rounded-md bg-[#F7E8D0] px-2.5 py-0.5 text-xs font-semibold text-[#8A5A12]">
                   {discount}% OFF
                 </span>
@@ -349,7 +401,10 @@ function ProductDetailContent({ slug }) {
           {!isJewellery && (
             <div className="flex flex-col gap-2">
               <p className="text-xs font-semibold text-[#3D1023]">
-                Color: <span className="font-normal text-[#641B32]">{selectedColor}</span>
+                Color:{" "}
+                <span className="font-normal text-[#641B32]">
+                  {selectedColor}
+                </span>
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 {COLOR_SWATCH_CLASSES.map((swatch) => {
@@ -362,7 +417,9 @@ function ProductDetailContent({ slug }) {
                       title={swatch.name}
                       aria-label={swatch.name}
                       className={`h-7 w-7 cursor-pointer rounded-full border-2 border-white shadow-sm transition ${swatch.bg} ${
-                        active ? 'ring-2 ring-[#641B32] ring-offset-1' : 'hover:scale-105'
+                        active
+                          ? "ring-2 ring-[#641B32] ring-offset-1"
+                          : "hover:scale-105"
                       }`}
                     />
                   );
@@ -374,7 +431,9 @@ function ProductDetailContent({ slug }) {
           {/* Quantity & Stock Indicator Row */}
           <div className="flex items-center justify-between gap-4 pt-1">
             <div className="flex items-center gap-3">
-              <span className="text-xs font-semibold text-[#3D1023]">Quantity:</span>
+              <span className="text-xs font-semibold text-[#3D1023]">
+                Quantity:
+              </span>
               <div className="flex items-center rounded-full border border-[#D9A0A9]/70 bg-white">
                 <button
                   type="button"
@@ -383,10 +442,16 @@ function ProductDetailContent({ slug }) {
                 >
                   -
                 </button>
-                <span className="min-w-6 text-center text-xs font-semibold text-[#3D1023]">{quantity}</span>
+                <span className="min-w-6 text-center text-xs font-semibold text-[#3D1023]">
+                  {quantity}
+                </span>
                 <button
                   type="button"
-                  onClick={() => setQuantity((q) => Math.min(Math.max(1, availableStock), q + 1))}
+                  onClick={() =>
+                    setQuantity((q) =>
+                      Math.min(Math.max(1, availableStock), q + 1),
+                    )
+                  }
                   className="cursor-pointer px-3 py-1 text-sm font-bold text-[#641B32]"
                 >
                   +
@@ -394,8 +459,10 @@ function ProductDetailContent({ slug }) {
               </div>
             </div>
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-              <span className={`h-2 w-2 rounded-full ${availableStock > 0 ? 'bg-emerald-600' : 'bg-red-600'}`} />
-              {availableStock > 0 ? 'In Stock' : 'Out of Stock'}
+              <span
+                className={`h-2 w-2 rounded-full ${availableStock > 0 ? "bg-emerald-600" : "bg-red-600"}`}
+              />
+              {availableStock > 0 ? "In Stock" : "Out of Stock"}
             </span>
           </div>
 
@@ -406,12 +473,16 @@ function ProductDetailContent({ slug }) {
               onClick={() => handleBagAction(false)}
               className={`flex cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-3 text-xs font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm ${
                 justAddedCart
-                  ? 'bg-emerald-700 text-white'
-                  : 'bg-[#641B32] text-[#FFF9F2] hover:bg-[#3D1023]'
+                  ? "bg-emerald-700 text-white"
+                  : "bg-[#641B32] text-[#FFF9F2] hover:bg-[#3D1023]"
               }`}
             >
-              {justAddedCart ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
-              <span>{justAddedCart ? 'Added to Cart' : 'Add to Cart'}</span>
+              {justAddedCart ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <ShoppingCart className="h-4 w-4" />
+              )}
+              <span>{justAddedCart ? "Added to Cart" : "Add to Cart"}</span>
             </button>
             <button
               type="button"
@@ -429,12 +500,14 @@ function ProductDetailContent({ slug }) {
             onClick={handleToggleWishlist}
             className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition ${
               wishlisted
-                ? 'border-[#641B32] bg-[#F5E7E8] text-[#641B32]'
-                : 'border-[#D9A0A9]/60 bg-white text-[#3D1023] hover:bg-[#F5E7E8]'
+                ? "border-[#641B32] bg-[#F5E7E8] text-[#641B32]"
+                : "border-[#D9A0A9]/60 bg-white text-[#3D1023] hover:bg-[#F5E7E8]"
             }`}
           >
-            <Heart className={`h-3.5 w-3.5 ${wishlisted ? 'fill-[#641B32] text-[#641B32]' : ''}`} />
-            <span>{wishlisted ? 'Saved in Wishlist' : 'Add to Wishlist'}</span>
+            <Heart
+              className={`h-3.5 w-3.5 ${wishlisted ? "fill-[#641B32] text-[#641B32]" : ""}`}
+            />
+            <span>{wishlisted ? "Saved in Wishlist" : "Add to Wishlist"}</span>
           </button>
 
           {actionMsg && (
@@ -442,10 +515,18 @@ function ProductDetailContent({ slug }) {
               severity="success"
               action={
                 <Link
-                  to={actionMsg.includes('wishlist') ? (isAuthenticated ? '/account/wishlist' : '/wishlist') : '/cart'}
+                  to={
+                    actionMsg.includes("wishlist")
+                      ? isAuthenticated
+                        ? "/account/wishlist"
+                        : "/wishlist"
+                      : "/cart"
+                  }
                   className="text-xs font-bold text-emerald-900 underline"
                 >
-                  {actionMsg.includes('wishlist') ? 'View Wishlist' : 'View Cart'}
+                  {actionMsg.includes("wishlist")
+                    ? "View Wishlist"
+                    : "View Cart"}
                 </Link>
               }
             >
@@ -460,7 +541,9 @@ function ProductDetailContent({ slug }) {
             className="flex items-center gap-2 rounded-xl border border-[#D9A0A9]/50 bg-[#FDF7F2] px-3 py-2"
           >
             <Truck className="h-4 w-4 shrink-0 text-[#641B32]" />
-            <span className="hidden text-xs font-medium text-[#3D1023] sm:inline">Check Delivery</span>
+            <span className="hidden text-xs font-medium text-[#3D1023] sm:inline">
+              Check Delivery
+            </span>
             <input
               type="text"
               maxLength={6}
@@ -476,12 +559,17 @@ function ProductDetailContent({ slug }) {
               Check
             </button>
           </form>
-          {pincodeErr && <p className="text-xs font-medium text-red-700">{pincodeErr}</p>}
+          {pincodeErr && (
+            <p className="text-xs font-medium text-red-700">{pincodeErr}</p>
+          )}
           {pincodeInfo && (
             <p className="rounded-xl bg-[#FDF7F2] px-3 py-2 text-xs text-[#3D1023]">
-              <strong className="text-[#641B32]">{pincodeInfo.zone_name} ({pincodeInfo.pincode}):</strong>{' '}
-              Delivery within {pincodeInfo.estimated_hours <= 24 ? '24 hours' : '3–4 days'} ·{' '}
-              {pincodeInfo.cod_available ? 'COD & UPI Available' : 'Prepaid'}
+              <strong className="text-[#641B32]">
+                {pincodeInfo.zone_name} ({pincodeInfo.pincode}):
+              </strong>{" "}
+              Delivery within{" "}
+              {pincodeInfo.estimated_hours <= 24 ? "24 hours" : "3–4 days"} ·{" "}
+              {pincodeInfo.cod_available ? "COD & UPI Available" : "Prepaid"}
             </p>
           )}
 
@@ -508,9 +596,9 @@ function ProductDetailContent({ slug }) {
           <div>
             <div className="flex flex-wrap gap-5 border-b border-[#D9A0A9]/35 text-xs font-semibold">
               {[
-                { key: 'details', label: 'Product Details' },
-                { key: 'fabric', label: 'Fabric & Care' },
-                { key: 'delivery', label: 'Delivery & Returns' },
+                { key: "details", label: "Product Details" },
+                { key: "fabric", label: "Fabric & Care" },
+                { key: "delivery", label: "Delivery & Returns" },
               ].map((t) => (
                 <button
                   key={t.key}
@@ -518,8 +606,8 @@ function ProductDetailContent({ slug }) {
                   onClick={() => setActiveTab(t.key)}
                   className={`cursor-pointer pb-2.5 transition ${
                     activeTab === t.key
-                      ? 'border-b-2 border-[#641B32] text-[#641B32]'
-                      : 'text-[#3D1023]/65 hover:text-[#641B32]'
+                      ? "border-b-2 border-[#641B32] text-[#641B32]"
+                      : "text-[#3D1023]/65 hover:text-[#641B32]"
                   }`}
                 >
                   {t.label}
@@ -528,30 +616,47 @@ function ProductDetailContent({ slug }) {
             </div>
 
             <div className="pt-3 text-xs leading-relaxed text-[#3D1023]/90">
-              {activeTab === 'details' && (
+              {activeTab === "details" && (
                 <div className="flex flex-col gap-3">
                   <p>{product.description}</p>
                   <div className="grid grid-cols-2 gap-2 rounded-xl bg-white p-3 border border-[#D9A0A9]/30">
                     <div>
-                      <span className="block text-[10px] uppercase tracking-wider text-[#A83F5E]">Category</span>
-                      <span className="font-semibold text-[#3D1023]">{mainCategory.name}</span>
+                      <span className="block text-[10px] uppercase tracking-wider text-[#A83F5E]">
+                        Category
+                      </span>
+                      <span className="font-semibold text-[#3D1023]">
+                        {mainCategory.name}
+                      </span>
                     </div>
                     {!isJewellery && subCategory?.name && (
                       <div>
-                        <span className="block text-[10px] uppercase tracking-wider text-[#A83F5E]">Subcategory</span>
-                        <span className="font-semibold text-[#3D1023]">{subCategory.name}</span>
+                        <span className="block text-[10px] uppercase tracking-wider text-[#A83F5E]">
+                          Subcategory
+                        </span>
+                        <span className="font-semibold text-[#3D1023]">
+                          {subCategory.name}
+                        </span>
                       </div>
                     )}
                     <div>
-                      <span className="block text-[10px] uppercase tracking-wider text-[#A83F5E]">Fabric</span>
-                      <span className="font-semibold text-[#3D1023]">{product.fabric}</span>
+                      <span className="block text-[10px] uppercase tracking-wider text-[#A83F5E]">
+                        Fabric
+                      </span>
+                      <span className="font-semibold text-[#3D1023]">
+                        {product.fabric}
+                      </span>
                     </div>
                     <div>
-                      <span className="block text-[10px] uppercase tracking-wider text-[#A83F5E]">SKU</span>
-                      <span className="font-semibold text-[#3D1023]">{selectedVariant?.sku || product.sku}</span>
+                      <span className="block text-[10px] uppercase tracking-wider text-[#A83F5E]">
+                        SKU
+                      </span>
+                      <span className="font-semibold text-[#3D1023]">
+                        {selectedVariant?.sku || product.sku}
+                      </span>
                     </div>
                   </div>
-                  {(subCategory.supports_blouse_option || subCategory.supports_gift_options !== false) && (
+                  {(subCategory.supports_blouse_option ||
+                    subCategory.supports_gift_options !== false) && (
                     <div className="flex flex-col gap-1.5 rounded-xl border border-[#D9A0A9]/35 bg-white p-3">
                       <p className="text-[11px] font-bold uppercase tracking-wider text-[#641B32]">
                         Atelier Tailoring &amp; Gifting
@@ -559,28 +664,76 @@ function ProductDetailContent({ slug }) {
                       {subCategory.supports_blouse_option && (
                         <>
                           <FormControlLabel
-                            control={<Checkbox checked={matchingBlouse} onChange={(e) => setMatchingBlouse(e.target.checked)} size="small" />}
-                            label={<span className="text-xs">Custom Tailored Blouse (+{formatINR(1200)})</span>}
+                            control={
+                              <Checkbox
+                                checked={matchingBlouse}
+                                onChange={(e) =>
+                                  setMatchingBlouse(e.target.checked)
+                                }
+                                size="small"
+                              />
+                            }
+                            label={
+                              <span className="text-xs">
+                                Custom Tailored Blouse (+{formatINR(1200)})
+                              </span>
+                            }
                           />
                           {matchingBlouse && (
-                            <TextField size="small" fullWidth label="Blouse Measurements / Notes" value={blouseNotes} onChange={(e) => setBlouseNotes(e.target.value)} />
+                            <TextField
+                              size="small"
+                              fullWidth
+                              label="Blouse Measurements / Notes"
+                              value={blouseNotes}
+                              onChange={(e) => setBlouseNotes(e.target.value)}
+                            />
                           )}
                         </>
                       )}
                       {subCategory.supports_petticoat_option && (
                         <FormControlLabel
-                          control={<Checkbox checked={petticoat} onChange={(e) => setPetticoat(e.target.checked)} size="small" />}
-                          label={<span className="text-xs">Cotton Satin Petticoat (+{formatINR(650)})</span>}
+                          control={
+                            <Checkbox
+                              checked={petticoat}
+                              onChange={(e) => setPetticoat(e.target.checked)}
+                              size="small"
+                            />
+                          }
+                          label={
+                            <span className="text-xs">
+                              Cotton Satin Petticoat (+{formatINR(650)})
+                            </span>
+                          }
                         />
                       )}
                       <div className="flex flex-wrap gap-2">
                         <FormControlLabel
-                          control={<Checkbox checked={giftWrap} onChange={(e) => setGiftWrap(e.target.checked)} size="small" />}
-                          label={<span className="text-xs">Gift Wrap (+{formatINR(150)})</span>}
+                          control={
+                            <Checkbox
+                              checked={giftWrap}
+                              onChange={(e) => setGiftWrap(e.target.checked)}
+                              size="small"
+                            />
+                          }
+                          label={
+                            <span className="text-xs">
+                              Gift Wrap (+{formatINR(150)})
+                            </span>
+                          }
                         />
                         <FormControlLabel
-                          control={<Checkbox checked={giftBox} onChange={(e) => setGiftBox(e.target.checked)} size="small" />}
-                          label={<span className="text-xs">Keepsake Box (+{formatINR(350)})</span>}
+                          control={
+                            <Checkbox
+                              checked={giftBox}
+                              onChange={(e) => setGiftBox(e.target.checked)}
+                              size="small"
+                            />
+                          }
+                          label={
+                            <span className="text-xs">
+                              Keepsake Box (+{formatINR(350)})
+                            </span>
+                          }
                         />
                       </div>
                     </div>
@@ -588,18 +741,34 @@ function ProductDetailContent({ slug }) {
                 </div>
               )}
 
-              {activeTab === 'fabric' && (
+              {activeTab === "fabric" && (
                 <div className="flex flex-col gap-2">
-                  <p><strong>Material:</strong> {product.fabric}</p>
-                  {product.length_width && <p><strong>Dimensions:</strong> {product.length_width}</p>}
-                  <p><strong>Care Guide:</strong> {product.wash_care || 'Dry clean recommended. Store folded in soft unbleached muslin.'}</p>
+                  <p>
+                    <strong>Material:</strong> {product.fabric}
+                  </p>
+                  {product.length_width && (
+                    <p>
+                      <strong>Dimensions:</strong> {product.length_width}
+                    </p>
+                  )}
+                  <p>
+                    <strong>Care Guide:</strong>{" "}
+                    {product.wash_care ||
+                      "Dry clean recommended. Store folded in soft unbleached muslin."}
+                  </p>
                 </div>
               )}
 
-              {activeTab === 'delivery' && (
+              {activeTab === "delivery" && (
                 <div className="flex flex-col gap-2">
-                  <p>Insured doorstep delivery across India with live OTP handoff verification.</p>
-                  <p>Complimentary shipping on orders above ₹2,999. 7-day easy return on uncustomized sarees.</p>
+                  <p>
+                    Insured doorstep delivery across India with live OTP handoff
+                    verification.
+                  </p>
+                  <p>
+                    Complimentary shipping on orders above ₹2,999. 7-day easy
+                    return on uncustomized sarees.
+                  </p>
                 </div>
               )}
             </div>
@@ -609,7 +778,9 @@ function ProductDetailContent({ slug }) {
         {/* Column 3: Right "Complete Your Look - Matching Jewellery" Card matching Image 1 (3 cols) */}
         <aside className="rounded-2xl border border-[#C39A52]/40 bg-[#FDF8F2] p-5 shadow-sm lg:col-span-3">
           <div className="text-center">
-            <h2 className="font-serif text-lg font-bold text-[#3D1023]">Complete Your Look</h2>
+            <h2 className="font-serif text-lg font-bold text-[#3D1023]">
+              Complete Your Look
+            </h2>
             <p className="text-xs text-[#A83F5E]">Matching Jewellery</p>
           </div>
 
@@ -618,10 +789,10 @@ function ProductDetailContent({ slug }) {
               ? matchingJewelleryList.slice(0, 3)
               : [
                   {
-                    name: 'Ruhani Pearl Chandbali',
-                    style: '₹2,990',
-                    image_url: '/assets/products/jewellery-chandbali.jpg',
-                    productSlug: 'ruhani-champagne-gold-pearl-chandbali-set',
+                    name: "Ruhani Pearl Chandbali",
+                    style: "₹2,990",
+                    image_url: "/assets/products/jewellery-chandbali.jpg",
+                    productSlug: "ruhani-champagne-gold-pearl-chandbali-set",
                   },
                 ]
             ).map((item) => (
@@ -631,16 +802,26 @@ function ProductDetailContent({ slug }) {
               >
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#D9A0A9]/40 bg-[#FFF9F2] text-[#C39A52]">
                   {item.image_url ? (
-                    <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
+                    <img
+                      src={item.image_url}
+                      alt={item.name}
+                      className="h-full w-full object-cover"
+                    />
                   ) : (
                     <Gem className="h-5 w-5" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-bold text-[#3D1023]">{item.name}</p>
-                  <p className="truncate text-[11px] text-[#641B32]/80">{item.style}</p>
+                  <p className="truncate text-xs font-bold text-[#3D1023]">
+                    {item.name}
+                  </p>
+                  <p className="truncate text-[11px] text-[#641B32]/80">
+                    {item.style}
+                  </p>
                   {item.productSlug && (
-                    <p className="mt-0.5 text-xs font-bold text-[#641B32]">₹2,990</p>
+                    <p className="mt-0.5 text-xs font-bold text-[#641B32]">
+                      ₹2,990
+                    </p>
                   )}
                 </div>
                 <button

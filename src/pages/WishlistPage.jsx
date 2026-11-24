@@ -1,12 +1,13 @@
-import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Heart, ArrowRight } from 'lucide-react';
-import { useWishlistStore } from '../store/useWishlistStore';
-import { useCartStore } from '../store/useCartStore';
-import ProductCard from '../components/ProductCard';
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Heart, ArrowRight } from "lucide-react";
+import { useWishlistStore } from "../store/useWishlistStore";
+import { useCartStore } from "../store/useCartStore";
+import ProductCard from "../components/ProductCard";
 
 export default function WishlistPage() {
-  const { items, fetchWishlist, toggleWishlist, isWishlisted } = useWishlistStore();
+  const { items, fetchWishlist, toggleWishlist, isWishlisted } =
+    useWishlistStore();
   const addItem = useCartStore((s) => s.addItem);
 
   useEffect(() => {
@@ -25,7 +26,7 @@ export default function WishlistPage() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-[1440px] px-4 py-10 sm:px-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-[#D9A0A9]/40 pb-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#A83F5E]">
@@ -46,9 +47,12 @@ export default function WishlistPage() {
       {items.length === 0 ? (
         <div className="rounded-2xl border border-[#D9A0A9]/40 bg-white p-12 text-center">
           <Heart className="mx-auto h-10 w-10 text-[#D9A0A9]" />
-          <p className="mt-3 text-base font-semibold text-[#3D1023]">Your wishlist is empty.</p>
+          <p className="mt-3 text-base font-semibold text-[#3D1023]">
+            Your wishlist is empty.
+          </p>
           <p className="mt-1 text-xs text-[#641B32]/80">
-            Tap the heart icon on any handloom saree or jewellery piece to save it here.
+            Tap the heart icon on any handloom saree or jewellery piece to save
+            it here.
           </p>
           <Link
             to="/collections/sarees"
