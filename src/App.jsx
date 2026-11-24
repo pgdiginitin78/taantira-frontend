@@ -33,6 +33,8 @@ import {
 } from './pages/account/AccountNotificationsAndSupportPages';
 
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
+import AdminSubcategoriesPage from './pages/admin/AdminSubcategoriesPage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminInventoryPage from './pages/admin/AdminInventoryPage';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
@@ -122,7 +124,30 @@ export default function App() {
             }
           >
             <Route index element={<AdminDashboardPage />} />
-            <Route path="products" element={<AdminProductsPage />} />
+            <Route
+              path="categories"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <AdminCategoriesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="subcategories"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <AdminSubcategoriesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="products"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <AdminProductsPage />
+                </ProtectedRoute>
+              }
+            />
             <Route path="inventory" element={<AdminInventoryPage />} />
             <Route path="orders" element={<AdminOrdersPage />} />
             <Route path="coupons" element={<AdminCouponsPage />} />

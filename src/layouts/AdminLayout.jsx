@@ -13,12 +13,16 @@ import {
   Settings,
   LogOut,
   ExternalLink,
+  FolderTree,
+  Layers,
 } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 
 const ADMIN_NAV = [
   { to: '/admin', label: 'Analytics Dashboard', icon: BarChart3, perm: 'admin.dashboard.view', end: true },
-  { to: '/admin/products', label: 'Catalogue & Products', icon: ShoppingBag, perm: 'catalogue.manage' },
+  { to: '/admin/categories', label: 'Main Categories', icon: FolderTree, superAdminOnly: true },
+  { to: '/admin/subcategories', label: 'Subcategories', icon: Layers, superAdminOnly: true },
+  { to: '/admin/products', label: 'Products & 5-Angle Photos', icon: ShoppingBag, superAdminOnly: true },
   { to: '/admin/inventory', label: 'Inventory & Alerts', icon: Boxes, perm: 'inventory.manage' },
   { to: '/admin/orders', label: 'Orders', icon: ClipboardList, perm: 'orders.manage' },
   { to: '/admin/coupons', label: 'Coupons & Marketing', icon: TicketPercent, perm: 'marketing.manage' },
@@ -35,7 +39,9 @@ export default function AdminLayout() {
   const isSuperAdmin = (user?.roles || []).includes('super_admin');
   const perms = new Set(user?.permissions || []);
 
-  const visibleNav = ADMIN_NAV.filter((item) => isSuperAdmin || perms.has(item.perm));
+  const visibleNav = ADMIN_NAV.filter((item) =>
+    item.superAdminOnly ? isSuperAdmin : isSuperAdmin || perms.has(item.perm)
+  );
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#FFF9F2] text-[#3D1023] lg:flex-row">

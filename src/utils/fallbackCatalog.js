@@ -319,6 +319,14 @@ export const filterFallbackProducts = ({
     );
   }
 
+  // Default curated order surfaces photographed pieces first cleanly while keeping all matching items accessible
+  list.sort((a, b) => {
+    const aHasImg = (a.images || []).length > 0 ? 1 : 0;
+    const bHasImg = (b.images || []).length > 0 ? 1 : 0;
+    if (aHasImg !== bHasImg) return bHasImg - aHasImg;
+    return Number(a.id || 0) - Number(b.id || 0);
+  });
+
   const total = list.length;
   const safeLimit = Math.max(1, Number(limit) || 24);
   const totalPages = Math.max(1, Math.ceil(total / safeLimit));
