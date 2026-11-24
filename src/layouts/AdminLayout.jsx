@@ -87,7 +87,7 @@ export default function AdminLayout() {
           <button
             type="button"
             onClick={logout}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#D9A0A9]/30 px-3 py-2 text-xs font-medium text-[#F5E7E8] hover:bg-[#641B32]"
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#D9A0A9]/30 px-3 py-2 text-xs font-medium text-[#F5E7E8] hover:bg-[#641B32]"
           >
             <LogOut className="h-4 w-4" /> Sign Out
           </button>

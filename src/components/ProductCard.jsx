@@ -91,7 +91,7 @@ export default function ProductCard({
               type="button"
               onClick={() => onToggleWishlist(product)}
               aria-label={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
-              className={`flex h-9 w-9 items-center justify-center rounded-full border shadow-sm transition ${
+              className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border shadow-sm transition ${
                 isWishlisted
                   ? 'border-[#641B32] bg-[#641B32] text-[#FFF9F2] ring-2 ring-[#C39A52]/50'
                   : 'border-[#D9A0A9]/60 bg-white/95 text-[#641B32] hover:bg-[#F5E7E8]'
@@ -105,7 +105,7 @@ export default function ProductCard({
               type="button"
               onClick={() => onQuickView(product)}
               aria-label="Quick view product"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9A0A9]/60 bg-white/95 text-[#641B32] shadow-sm transition hover:bg-[#F5E7E8]"
+              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[#D9A0A9]/60 bg-white/95 text-[#641B32] shadow-sm transition hover:bg-[#F5E7E8]"
             >
               <Eye className="h-4 w-4" />
             </button>
@@ -148,7 +148,7 @@ export default function ProductCard({
             <button
               type="button"
               onClick={handleCardAdd}
-              className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold transition ${
+              className={`inline-flex cursor-pointer items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold transition ${
                 justAdded
                   ? 'bg-emerald-700 text-white'
                   : 'border border-[#641B32]/30 bg-[#FFF9F2] text-[#641B32] hover:bg-[#641B32] hover:text-[#FFF9F2]'

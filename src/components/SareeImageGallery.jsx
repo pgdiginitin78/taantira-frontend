@@ -263,7 +263,7 @@ export default function SareeImageGallery({
                 onClick={() => selectAngle(idx)}
                 data-angle-thumb={angle.key}
                 aria-label={`${angle.label} (${thumbAvailable ? 'Available' : 'Image needed'})`}
-                className={`relative aspect-[3/4] w-16 shrink-0 overflow-hidden rounded-xl border text-left transition sm:w-full ${
+                className={`relative aspect-[3/4] w-16 shrink-0 cursor-pointer overflow-hidden rounded-xl border text-left transition sm:w-full ${
                   isSelected
                     ? 'border-[#641B32] ring-2 ring-[#641B32]/40'
                     : 'border-[#D9A0A9]/60 bg-[#FFF9F2] opacity-85 hover:opacity-100'
@@ -291,7 +291,7 @@ export default function SareeImageGallery({
             type="button"
             onClick={() => selectAngle(activeIndex + 1)}
             aria-label="Next saree angle thumbnail"
-            className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#D9A0A9]/60 bg-white text-[#641B32] shadow-sm hover:bg-[#F5E7E8] sm:inline-flex"
+            className="hidden h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#D9A0A9]/60 bg-white text-[#641B32] shadow-sm hover:bg-[#F5E7E8] sm:inline-flex"
           >
             <ChevronDown className="h-4 w-4" />
           </button>
@@ -364,7 +364,7 @@ export default function SareeImageGallery({
                       e.stopPropagation();
                       selectAngle(firstAvailableIdx);
                     }}
-                    className="mt-4 rounded-full bg-[#641B32] px-4 py-2 text-xs font-semibold text-[#FFF9F2] transition hover:bg-[#3D1023]"
+                    className="mt-4 cursor-pointer rounded-full bg-[#641B32] px-4 py-2 text-xs font-semibold text-[#FFF9F2] transition hover:bg-[#3D1023]"
                   >
                     Return to Available View ({angles[firstAvailableIdx]?.label})
                   </button>
@@ -389,7 +389,7 @@ export default function SareeImageGallery({
                 <button
                   type="button"
                   onClick={handleResetZoom}
-                  className="rounded-full bg-[#C39A52] px-2 py-0.5 text-[10px] font-bold text-[#3D1023] hover:bg-[#FFF9F2]"
+                  className="cursor-pointer rounded-full bg-[#C39A52] px-2 py-0.5 text-[10px] font-bold text-[#3D1023] hover:bg-[#FFF9F2]"
                 >
                   Reset
                 </button>
@@ -412,7 +412,7 @@ export default function SareeImageGallery({
                   type="button"
                   onClick={onToggleWishlist}
                   aria-label={wishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
-                  className={`flex h-9 w-9 items-center justify-center rounded-full border shadow-md backdrop-blur-md transition ${
+                  className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border shadow-md backdrop-blur-md transition ${
                     wishlisted
                       ? 'border-[#641B32] bg-[#641B32] text-[#FFF9F2] ring-2 ring-[#C39A52]/60'
                       : 'border-[#D9A0A9]/50 bg-white/90 text-[#3D1023] hover:bg-[#F5E7E8]'
@@ -426,7 +426,7 @@ export default function SareeImageGallery({
                   type="button"
                   onClick={onShare}
                   aria-label="Share saree link"
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9A0A9]/50 bg-white/90 text-[#3D1023] shadow-md backdrop-blur-md transition hover:bg-[#F5E7E8]"
+                  className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[#D9A0A9]/50 bg-white/90 text-[#3D1023] shadow-md backdrop-blur-md transition hover:bg-[#F5E7E8]"
                 >
                   <Share2 className="h-4 w-4" />
                 </button>
@@ -435,7 +435,7 @@ export default function SareeImageGallery({
                 type="button"
                 onClick={() => setFullscreenOpen(true)}
                 aria-label="Open fullscreen gallery"
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9A0A9]/50 bg-white/90 text-[#3D1023] shadow-md backdrop-blur-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
+                className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-[#D9A0A9]/50 bg-white/90 text-[#3D1023] shadow-md backdrop-blur-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
               >
                 <Maximize2 className="h-4 w-4" />
               </button>
@@ -448,7 +448,7 @@ export default function SareeImageGallery({
                 selectAngle(activeIndex - 1);
               }}
               aria-label="Previous angle"
-              className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#3D1023] shadow-md backdrop-blur-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
+              className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/90 text-[#3D1023] shadow-md backdrop-blur-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -459,7 +459,7 @@ export default function SareeImageGallery({
                 selectAngle(activeIndex + 1);
               }}
               aria-label="Next angle"
-              className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#3D1023] shadow-md backdrop-blur-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
+              className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/90 text-[#3D1023] shadow-md backdrop-blur-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -475,7 +475,7 @@ export default function SareeImageGallery({
                   onClick={handleZoomOut}
                   disabled={zoom <= 1}
                   aria-label="Zoom out"
-                  className="flex h-7 w-7 items-center justify-center rounded-full transition hover:bg-white/15 disabled:opacity-35"
+                  className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-35"
                 >
                   <ZoomOut className="h-3.5 w-3.5" />
                 </button>
@@ -489,7 +489,7 @@ export default function SareeImageGallery({
                         type="button"
                         onClick={() => setZoomPreset(preset.scale)}
                         data-testid={`zoom-preset-${preset.label}`}
-                        className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
+                        className={`cursor-pointer rounded-full px-2.5 py-1 text-[11px] font-semibold transition ${
                           active
                             ? 'bg-[#C39A52] text-[#3D1023] shadow-sm'
                             : 'text-[#FFF9F2]/80 hover:bg-white/15 hover:text-white'
@@ -506,7 +506,7 @@ export default function SareeImageGallery({
                   onClick={handleZoomIn}
                   disabled={zoom >= 3}
                   aria-label="Zoom in"
-                  className="flex h-7 w-7 items-center justify-center rounded-full transition hover:bg-white/15 disabled:opacity-35"
+                  className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-35"
                 >
                   <ZoomIn className="h-3.5 w-3.5" />
                 </button>
@@ -516,7 +516,7 @@ export default function SareeImageGallery({
                     type="button"
                     onClick={handleResetZoom}
                     aria-label="Reset zoom"
-                    className="flex h-7 w-7 items-center justify-center rounded-full border border-[#C39A52]/50 text-[#C39A52] transition hover:bg-[#C39A52] hover:text-[#3D1023]"
+                    className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-[#C39A52]/50 text-[#C39A52] transition hover:bg-[#C39A52] hover:text-[#3D1023]"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
                   </button>
@@ -571,7 +571,7 @@ export default function SareeImageGallery({
                     onClick={handleZoomOut}
                     disabled={zoom <= 1}
                     aria-label="Fullscreen zoom out"
-                    className="rounded-full p-1.5 text-[#FFF9F2] hover:bg-[#641B32] disabled:opacity-40"
+                    className="cursor-pointer rounded-full p-1.5 text-[#FFF9F2] hover:bg-[#641B32] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <ZoomOut className="h-4 w-4" />
                   </button>
@@ -582,7 +582,7 @@ export default function SareeImageGallery({
                         key={preset.label}
                         type="button"
                         onClick={() => setZoomPreset(preset.scale)}
-                        className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${
+                        className={`cursor-pointer rounded-full px-2.5 py-1 text-xs font-semibold transition ${
                           active
                             ? 'bg-[#C39A52] text-[#3D1023]'
                             : 'text-[#FFF9F2]/80 hover:bg-[#641B32]'
@@ -597,7 +597,7 @@ export default function SareeImageGallery({
                     onClick={handleZoomIn}
                     disabled={zoom >= 3}
                     aria-label="Fullscreen zoom in"
-                    className="rounded-full p-1.5 text-[#FFF9F2] hover:bg-[#641B32] disabled:opacity-40"
+                    className="cursor-pointer rounded-full p-1.5 text-[#FFF9F2] hover:bg-[#641B32] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <ZoomIn className="h-4 w-4" />
                   </button>
@@ -607,7 +607,7 @@ export default function SareeImageGallery({
                 type="button"
                 onClick={() => setFullscreenOpen(false)}
                 aria-label="Close fullscreen gallery"
-                className="rounded-full bg-[#C39A52] p-2 text-[#3D1023] hover:bg-[#FFF9F2]"
+                className="cursor-pointer rounded-full bg-[#C39A52] p-2 text-[#3D1023] hover:bg-[#FFF9F2]"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -625,7 +625,7 @@ export default function SareeImageGallery({
               type="button"
               onClick={() => selectAngle(activeIndex - 1)}
               aria-label="Previous fullscreen angle"
-              className="absolute left-2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[#3D1023]/90 text-[#FFF9F2] hover:bg-[#641B32]"
+              className="absolute left-2 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#3D1023]/90 text-[#FFF9F2] hover:bg-[#641B32]"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -660,7 +660,7 @@ export default function SareeImageGallery({
               type="button"
               onClick={() => selectAngle(activeIndex + 1)}
               aria-label="Next fullscreen angle"
-              className="absolute right-2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[#3D1023]/90 text-[#FFF9F2] hover:bg-[#641B32]"
+              className="absolute right-2 z-10 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#3D1023]/90 text-[#FFF9F2] hover:bg-[#641B32]"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
@@ -677,7 +677,7 @@ export default function SareeImageGallery({
                   key={angle.key || idx}
                   type="button"
                   onClick={() => selectAngle(idx)}
-                  className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition ${
+                  className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition ${
                     idx === activeIndex
                       ? 'border-[#C39A52] bg-[#C39A52] font-semibold text-[#3D1023]'
                       : 'border-[#D9A0A9]/40 bg-[#3D1023] text-[#FFF9F2]/80 hover:border-[#FFF9F2]'

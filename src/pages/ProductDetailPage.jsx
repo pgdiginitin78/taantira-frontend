@@ -361,7 +361,7 @@ function ProductDetailContent({ slug }) {
                       onClick={() => setSelectedColor(swatch.name)}
                       title={swatch.name}
                       aria-label={swatch.name}
-                      className={`h-7 w-7 rounded-full border-2 border-white shadow-sm transition ${swatch.bg} ${
+                      className={`h-7 w-7 cursor-pointer rounded-full border-2 border-white shadow-sm transition ${swatch.bg} ${
                         active ? 'ring-2 ring-[#641B32] ring-offset-1' : 'hover:scale-105'
                       }`}
                     />
@@ -379,7 +379,7 @@ function ProductDetailContent({ slug }) {
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="px-3 py-1 text-sm font-bold text-[#641B32]"
+                  className="cursor-pointer px-3 py-1 text-sm font-bold text-[#641B32]"
                 >
                   -
                 </button>
@@ -387,7 +387,7 @@ function ProductDetailContent({ slug }) {
                 <button
                   type="button"
                   onClick={() => setQuantity((q) => Math.min(Math.max(1, availableStock), q + 1))}
-                  className="px-3 py-1 text-sm font-bold text-[#641B32]"
+                  className="cursor-pointer px-3 py-1 text-sm font-bold text-[#641B32]"
                 >
                   +
                 </button>
@@ -404,7 +404,7 @@ function ProductDetailContent({ slug }) {
               type="button"
               disabled={availableStock <= 0}
               onClick={() => handleBagAction(false)}
-              className={`flex items-center justify-center gap-2 rounded-full px-4 py-3 text-xs font-semibold shadow-sm transition disabled:opacity-50 sm:text-sm ${
+              className={`flex cursor-pointer items-center justify-center gap-2 rounded-full px-4 py-3 text-xs font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm ${
                 justAddedCart
                   ? 'bg-emerald-700 text-white'
                   : 'bg-[#641B32] text-[#FFF9F2] hover:bg-[#3D1023]'
@@ -417,7 +417,7 @@ function ProductDetailContent({ slug }) {
               type="button"
               disabled={availableStock <= 0}
               onClick={() => handleBagAction(true)}
-              className="flex items-center justify-center gap-2 rounded-full border border-[#C39A52] bg-[#FFF9F2] px-4 py-3 text-xs font-semibold text-[#3D1023] transition hover:bg-[#F5E7E8] disabled:opacity-50 sm:text-sm"
+              className="flex cursor-pointer items-center justify-center gap-2 rounded-full border border-[#C39A52] bg-[#FFF9F2] px-4 py-3 text-xs font-semibold text-[#3D1023] transition hover:bg-[#F5E7E8] disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
             >
               <Zap className="h-4 w-4 text-[#C39A52]" />
               <span>Buy Now</span>
@@ -427,7 +427,7 @@ function ProductDetailContent({ slug }) {
           <button
             type="button"
             onClick={handleToggleWishlist}
-            className={`flex w-full items-center justify-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition ${
+            className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition ${
               wishlisted
                 ? 'border-[#641B32] bg-[#F5E7E8] text-[#641B32]'
                 : 'border-[#D9A0A9]/60 bg-white text-[#3D1023] hover:bg-[#F5E7E8]'
@@ -471,7 +471,7 @@ function ProductDetailContent({ slug }) {
             />
             <button
               type="submit"
-              className="shrink-0 rounded-full bg-[#3D1023] px-4 py-1.5 text-xs font-semibold text-[#FFF9F2] transition hover:bg-[#641B32]"
+              className="shrink-0 cursor-pointer rounded-full bg-[#3D1023] px-4 py-1.5 text-xs font-semibold text-[#FFF9F2] transition hover:bg-[#641B32]"
             >
               Check
             </button>
@@ -516,7 +516,7 @@ function ProductDetailContent({ slug }) {
                   key={t.key}
                   type="button"
                   onClick={() => setActiveTab(t.key)}
-                  className={`pb-2.5 transition ${
+                  className={`cursor-pointer pb-2.5 transition ${
                     activeTab === t.key
                       ? 'border-b-2 border-[#641B32] text-[#641B32]'
                       : 'text-[#3D1023]/65 hover:text-[#641B32]'
@@ -647,7 +647,7 @@ function ProductDetailContent({ slug }) {
                   type="button"
                   onClick={() => handleAddMatchingItem(item)}
                   aria-label={`View or add ${item.name}`}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#641B32] text-[#FFF9F2] transition hover:bg-[#3D1023]"
+                  className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg bg-[#641B32] text-[#FFF9F2] transition hover:bg-[#3D1023]"
                 >
                   <ShoppingBag className="h-4 w-4" />
                 </button>

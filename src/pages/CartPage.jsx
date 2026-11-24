@@ -63,10 +63,11 @@ export default function CartPage() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-[1440px] px-4 py-10 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="font-serif text-3xl font-bold text-[#3D1023]">
-          Shopping Bag ({items.reduce((sum, i) => sum + Number(i.quantity || 1), 0)})
+          Shopping Bag (
+          {items.reduce((sum, i) => sum + Number(i.quantity || 1), 0)})
         </h1>
         {!isAuthenticated && (
           <Link
@@ -186,7 +187,7 @@ export default function CartPage() {
                             item.quantity > 1 &&
                             updateQty(item.id, item.quantity - 1)
                           }
-                          className="px-3 py-1 text-sm font-bold text-[#641B32]"
+                          className="cursor-pointer px-3 py-1 text-sm font-bold text-[#641B32]"
                         >
                           -
                         </button>
@@ -196,7 +197,7 @@ export default function CartPage() {
                         <button
                           type="button"
                           onClick={() => updateQty(item.id, item.quantity + 1)}
-                          className="px-3 py-1 text-sm font-bold text-[#641B32]"
+                          className="cursor-pointer px-3 py-1 text-sm font-bold text-[#641B32]"
                         >
                           +
                         </button>
@@ -206,14 +207,14 @@ export default function CartPage() {
                         <button
                           type="button"
                           onClick={() => moveToWishlist(item.id)}
-                          className="inline-flex items-center gap-1 font-medium text-[#641B32] hover:text-[#A83F5E]"
+                          className="inline-flex cursor-pointer items-center gap-1 font-medium text-[#641B32] hover:text-[#A83F5E]"
                         >
                           <Heart className="h-3.5 w-3.5" /> Save to Wishlist
                         </button>
                         <button
                           type="button"
                           onClick={() => removeItem(item.id)}
-                          className="inline-flex items-center gap-1 font-medium text-red-700 hover:underline"
+                          className="inline-flex cursor-pointer items-center gap-1 font-medium text-red-700 hover:underline"
                         >
                           <Trash2 className="h-3.5 w-3.5" /> Remove
                         </button>
@@ -266,7 +267,7 @@ export default function CartPage() {
                   <button
                     type="button"
                     onClick={handleRemoveCoupon}
-                    className="font-semibold underline"
+                    className="cursor-pointer font-semibold underline"
                   >
                     Remove
                   </button>
@@ -328,7 +329,9 @@ export default function CartPage() {
                 }
                 className="mt-6 py-3"
               >
-                {isAuthenticated ? "Proceed to Checkout" : "Sign In to Checkout"}
+                {isAuthenticated
+                  ? "Proceed to Checkout"
+                  : "Sign In to Checkout"}
               </Button>
             </div>
           </div>

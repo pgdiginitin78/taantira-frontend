@@ -42,7 +42,7 @@ export function AccountNotificationsPage() {
               </div>
               <p className="mt-1 text-[#641B32]">{n.message}</p>
               {!n.is_read && (
-                <button type="button" onClick={() => markRead(n.id)} className="mt-2 font-semibold text-[#A83F5E] underline">
+                <button type="button" onClick={() => markRead(n.id)} className="mt-2 cursor-pointer font-semibold text-[#A83F5E] underline">
                   Mark as read
                 </button>
               )}

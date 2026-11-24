@@ -54,7 +54,7 @@ export default function DataTable({ data = [], columns = [], searchPlaceholder =
                       <button
                         type="button"
                         onClick={header.column.getToggleSortingHandler()}
-                        className="inline-flex items-center gap-1 hover:text-[#3D1023]"
+                        className="inline-flex cursor-pointer items-center gap-1 hover:text-[#3D1023]"
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         <ArrowUpDown className="h-3 w-3 opacity-60" />
@@ -96,7 +96,7 @@ export default function DataTable({ data = [], columns = [], searchPlaceholder =
             type="button"
             disabled={!table.getCanPreviousPage()}
             onClick={() => table.previousPage()}
-            className="rounded border border-[#D9A0A9] px-2.5 py-1 disabled:opacity-40"
+            className="cursor-pointer rounded border border-[#D9A0A9] px-2.5 py-1 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Previous
           </button>
@@ -104,7 +104,7 @@ export default function DataTable({ data = [], columns = [], searchPlaceholder =
             type="button"
             disabled={!table.getCanNextPage()}
             onClick={() => table.nextPage()}
-            className="rounded border border-[#D9A0A9] px-2.5 py-1 disabled:opacity-40"
+            className="cursor-pointer rounded border border-[#D9A0A9] px-2.5 py-1 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Next
           </button>

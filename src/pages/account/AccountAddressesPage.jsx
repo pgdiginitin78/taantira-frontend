@@ -71,7 +71,7 @@ export default function AccountAddressesPage() {
               <p>{addr.city}, {addr.state} - {addr.pincode}</p>
               <p>Phone: {addr.phone}</p>
             </div>
-            <button type="button" onClick={() => deleteAddr(addr.id)} className="mt-4 inline-flex items-center gap-1 self-end text-xs text-red-700 hover:underline">
+            <button type="button" onClick={() => deleteAddr(addr.id)} className="mt-4 inline-flex cursor-pointer items-center gap-1 self-end text-xs text-red-700 hover:underline">
               <Trash2 className="h-3.5 w-3.5" /> Remove
             </button>
           </div>

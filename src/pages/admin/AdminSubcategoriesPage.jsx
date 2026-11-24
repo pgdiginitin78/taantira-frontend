@@ -186,21 +186,21 @@ export default function AdminSubcategoriesPage() {
           <button
             type="button"
             onClick={() => navigate(`/admin/products?category=${row.original.id}`)}
-            className="inline-flex items-center gap-1 rounded-lg border border-[#D9A0A9] px-2 py-1 text-[11px] font-semibold text-[#641B32] hover:bg-[#F5E7E8]"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-[#D9A0A9] px-2 py-1 text-[11px] font-semibold text-[#641B32] hover:bg-[#F5E7E8]"
           >
             <ShoppingBag className="h-3 w-3" /> Add Saree
           </button>
           <button
             type="button"
             onClick={() => startEdit(row.original)}
-            className="inline-flex items-center gap-1 rounded-lg border border-[#641B32]/40 px-2 py-1 text-[11px] font-semibold text-[#641B32] hover:bg-[#F5E7E8]"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-[#641B32]/40 px-2 py-1 text-[11px] font-semibold text-[#641B32] hover:bg-[#F5E7E8]"
           >
             <Pencil className="h-3 w-3" /> Edit
           </button>
           <button
             type="button"
             onClick={() => handleDelete(row.original)}
-            className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-50"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-red-200 px-2 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-50"
           >
             <Trash2 className="h-3 w-3" /> Delete
           </button>
@@ -238,7 +238,7 @@ export default function AdminSubcategoriesPage() {
         <button
           type="button"
           onClick={() => setSearchParams({})}
-          className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+          className={`cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
             !parentFilter ? 'bg-[#641B32] text-[#FFF9F2]' : 'border border-[#D9A0A9] bg-white text-[#641B32]'
           }`}
         >
@@ -249,7 +249,7 @@ export default function AdminSubcategoriesPage() {
             key={main.id}
             type="button"
             onClick={() => setSearchParams({ parent: String(main.id) })}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+            className={`cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
               String(parentFilter) === String(main.id)
                 ? 'bg-[#641B32] text-[#FFF9F2]'
                 : 'border border-[#D9A0A9] bg-white text-[#641B32] hover:bg-[#F5E7E8]'

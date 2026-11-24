@@ -241,21 +241,21 @@ export default function AdminCategoriesPage() {
           <button
             type="button"
             onClick={() => navigate(`/admin/subcategories?parent=${row.original.id}`)}
-            className="inline-flex items-center gap-1 rounded-lg border border-[#D9A0A9] px-2 py-1 text-[11px] font-semibold text-[#641B32] hover:bg-[#F5E7E8]"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-[#D9A0A9] px-2 py-1 text-[11px] font-semibold text-[#641B32] hover:bg-[#F5E7E8]"
           >
             <Layers className="h-3 w-3" /> Subcategories
           </button>
           <button
             type="button"
             onClick={() => startEdit(row.original)}
-            className="inline-flex items-center gap-1 rounded-lg border border-[#641B32]/40 px-2 py-1 text-[11px] font-semibold text-[#641B32] hover:bg-[#F5E7E8]"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-[#641B32]/40 px-2 py-1 text-[11px] font-semibold text-[#641B32] hover:bg-[#F5E7E8]"
           >
             <Pencil className="h-3 w-3" /> Edit
           </button>
           <button
             type="button"
             onClick={() => handleDelete(row.original)}
-            className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-50"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-red-200 px-2 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-50"
           >
             <Trash2 className="h-3 w-3" /> Delete
           </button>

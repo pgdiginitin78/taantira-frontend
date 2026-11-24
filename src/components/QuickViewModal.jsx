@@ -83,7 +83,7 @@ export default function QuickViewModal({ product, open, onClose }) {
                           setSelectedVariantId(v.id);
                           setFeedback('');
                         }}
-                        className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+                        className={`cursor-pointer rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
                           active
                             ? 'border-[#641B32] bg-[#641B32] text-[#FFF9F2]'
                             : 'border-[#D9A0A9] bg-white text-[#3D1023] hover:bg-[#F5E7E8]'

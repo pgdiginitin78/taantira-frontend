@@ -125,7 +125,9 @@ export default function HomePage() {
   const [slideIdx, setSlideIdx] = useState(0);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 
-  const wishlistedIds = new Set(wishlistItems.map((entry) => Number(entry.id || entry.product?.id)));
+  const wishlistedIds = new Set(
+    wishlistItems.map((entry) => Number(entry.id || entry.product?.id)),
+  );
 
   useEffect(() => {
     let active = true;
@@ -257,7 +259,7 @@ export default function HomePage() {
             )
           }
           aria-label="Previous hero slide"
-          className="absolute bottom-3 left-4 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-[#3D1023] shadow transition hover:bg-white sm:bottom-auto sm:left-4 sm:top-1/2 sm:h-9 sm:w-9 sm:-translate-y-1/2"
+          className="absolute bottom-3 left-4 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/85 text-[#3D1023] shadow transition hover:bg-white sm:bottom-auto sm:left-4 sm:top-1/2 sm:h-9 sm:w-9 sm:-translate-y-1/2"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -265,7 +267,7 @@ export default function HomePage() {
           type="button"
           onClick={() => setSlideIdx((i) => (i + 1) % HERO_SLIDES.length)}
           aria-label="Next hero slide"
-          className="absolute bottom-3 right-4 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/85 text-[#3D1023] shadow transition hover:bg-white sm:bottom-auto sm:right-4 sm:top-1/2 sm:h-9 sm:w-9 sm:-translate-y-1/2"
+          className="absolute bottom-3 right-4 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/85 text-[#3D1023] shadow transition hover:bg-white sm:bottom-auto sm:right-4 sm:top-1/2 sm:h-9 sm:w-9 sm:-translate-y-1/2"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
@@ -278,7 +280,7 @@ export default function HomePage() {
               type="button"
               onClick={() => setSlideIdx(idx)}
               aria-label={`Hero slide ${idx + 1}`}
-              className={`h-2 w-2 rounded-full transition ${
+              className={`h-2 w-2 cursor-pointer rounded-full transition ${
                 idx === slideIdx
                   ? "bg-[#3D1023] ring-2 ring-[#FFF9F2]"
                   : "bg-[#FFF9F2]/60 hover:bg-[#FFF9F2]"
@@ -289,7 +291,7 @@ export default function HomePage() {
       </section>
 
       {/* Shop by Saree Weave & Jewellery (All 7 Main Saree Categories + Jewellery) */}
-      <section className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+      <section className="mx-auto w-full max-w-[1440px] px-4 sm:px-6">
         <SectionHeader
           eyebrow="7 Main Saree Houses • 42 Subcategories"
           title="Shop by Weave &amp; Craft"
@@ -326,7 +328,7 @@ export default function HomePage() {
 
       {/* Dedicated Nauvari / 9 Vaari Collection Section */}
       <section className="border-y border-[#D9A0A9]/40 bg-[#F5E7E8]/55 py-14">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-6">
           <SectionHeader
             eyebrow="Dedicated Maharashtrian Nine-Yard Edit"
             title="Nauvari / 9 Vaari Sarees"
@@ -363,7 +365,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+      <section className="mx-auto w-full max-w-[1440px] px-4 sm:px-6">
         <SectionHeader
           eyebrow="Photographed Handloom Highlights"
           title="Handwoven Saree Collection"
@@ -387,7 +389,7 @@ export default function HomePage() {
       </section>
 
       <section className="bg-[#F5E7E8]/55 py-14">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-6">
           <SectionHeader
             eyebrow="10% Curated Capsule"
             title="Heritage Saree Jewellery"
@@ -443,7 +445,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+      <section className="mx-auto w-full max-w-[1440px] px-4 sm:px-6">
         <SectionHeader
           eyebrow="Verified Order Metrics"
           title="Best Selling Sarees"

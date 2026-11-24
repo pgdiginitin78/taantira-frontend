@@ -292,7 +292,7 @@ export default function CheckoutPage() {
                         key={addr.id}
                         type="button"
                         onClick={() => applySavedAddress(addr)}
-                        className="rounded-xl border border-[#D9A0A9] bg-[#FFF9F2] px-3 py-2 text-left text-xs hover:bg-[#F5E7E8]"
+                        className="cursor-pointer rounded-xl border border-[#D9A0A9] bg-[#FFF9F2] px-3 py-2 text-left text-xs hover:bg-[#F5E7E8]"
                       >
                         <p className="font-bold text-[#641B32]">
                           {addr.label} ({addr.pincode})

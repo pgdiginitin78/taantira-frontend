@@ -57,7 +57,7 @@ export default function StarterPage() {
         </div>
         <button
           type="button"
-          className="counter"
+          className="counter cursor-pointer"
           onClick={() => setCount((c) => c + 1)}
         >
           Count is {count}
