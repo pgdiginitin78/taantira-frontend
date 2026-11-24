@@ -12,25 +12,27 @@ import {
   X,
   LogOut,
   Sparkles,
+  Camera,
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
 import { useCartStore } from '../store/useCartStore';
+import { FALLBACK_CATEGORIES, filterFallbackProducts } from '../utils/fallbackCatalog';
 
 const newsletterSchema = yup.object({
   email: yup.string().trim().lowercase().email('Enter a valid email address').required('Email is required'),
 });
 
 const STORE_NAV_LINKS = [
-  { to: '/collections/new-arrivals', label: 'New Arrivals', accent: 'text-[#A83F5E]' },
-  { to: '/collections/sarees', label: 'All Sarees (90%)', accent: 'text-[#641B32] font-bold' },
+  { to: '/collections/sarees', label: 'All Sarees', accent: 'text-[#641B32] font-bold' },
   { to: '/collections/banarasi-sarees', label: 'Banarasi', accent: 'text-[#3D1023]' },
   { to: '/collections/kanjivaram-sarees', label: 'Kanjivaram', accent: 'text-[#3D1023]' },
   { to: '/collections/paithani-tussar-sarees', label: 'Paithani & Tussar', accent: 'text-[#3D1023]' },
   { to: '/collections/organza-georgette-sarees', label: 'Organza & Georgette', accent: 'text-[#3D1023]' },
-  { to: '/collections/jamdani-handloom-sarees', label: 'Jamdani & Chanderi', accent: 'text-[#3D1023]' },
-  { to: '/collections/jewellery', label: 'Saree Jewellery (10%)', accent: 'text-[#C39A52]' },
-  { to: '/collections/festive-collections', label: 'Festive Edit', accent: 'text-[#3D1023]' },
+  { to: '/collections/jamdani-chanderi-sarees', label: 'Jamdani & Chanderi', accent: 'text-[#3D1023]' },
+  { to: '/collections/nauvari-sarees', label: 'Nauvari / 9 Vaari', accent: 'text-[#641B32] font-semibold' },
+  { to: '/collections/regional-handloom-sarees', label: 'Regional Handloom', accent: 'text-[#3D1023]' },
+  { to: '/collections/jewellery', label: 'Saree Jewellery', accent: 'text-[#C39A52]' },
 ];
 
 export default function StorefrontLayout() {
@@ -81,7 +83,14 @@ export default function StorefrontLayout() {
           setSuggestions(res.data?.data || { products: [], categories: [] });
           setShowSuggestions(true);
         })
-        .catch(() => {});
+        .catch(() => {
+          const fallbackMatches = filterFallbackProducts({ slug: 'all', q: trimmed, limit: 6 });
+          const matchedCats = FALLBACK_CATEGORIES.filter((c) =>
+            c.name.toLowerCase().includes(trimmed.toLowerCase())
+          );
+          setSuggestions({ products: fallbackMatches.products, categories: matchedCats });
+          setShowSuggestions(true);
+        });
     }, 250);
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -121,7 +130,7 @@ export default function StorefrontLayout() {
 
       {/* Main Header */}
       <header className="sticky top-0 z-40 border-b border-[#D9A0A9]/40 bg-[#FFF9F2]/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:gap-4 sm:px-6 sm:py-3.5">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -158,7 +167,7 @@ export default function StorefrontLayout() {
                 }}
                 onFocus={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 180)}
-                placeholder="Search Banarasi, Kanjivaram, Paithani sarees & jewellery..."
+                placeholder="Search Banarasi, Kanjivaram, Nauvari sarees & fabrics..."
                 className="w-full rounded-full border border-[#D9A0A9]/60 bg-white py-2 pl-10 pr-4 text-sm text-[#3D1023] placeholder-[#641B32]/50 focus:border-[#641B32] focus:outline-none"
               />
             </form>
@@ -171,7 +180,7 @@ export default function StorefrontLayout() {
                     <div className="flex flex-wrap gap-1.5">
                       {suggestions.categories.map((cat) => (
                         <Link
-                          key={cat.id}
+                          key={cat.id || cat.slug}
                           to={`/collections/${cat.slug}`}
                           className="rounded-full bg-[#F5E7E8] px-3 py-1 text-xs font-medium text-[#641B32] hover:bg-[#D9A0A9]/40"
                         >
@@ -185,15 +194,21 @@ export default function StorefrontLayout() {
                   <div className="divide-y divide-[#F5E7E8]">
                     {suggestions.products.map((prod) => (
                       <Link
-                        key={prod.id}
+                        key={prod.id || prod.slug}
                         to={`/products/${prod.slug}`}
                         className="flex items-center gap-3 px-4 py-2.5 transition hover:bg-[#FFF9F2]"
                       >
-                        <img
-                          src={prod.images?.[0]?.image_url || '/assets/products/saree-burgundy.jpg'}
-                          alt={prod.name}
-                          className="h-11 w-9 rounded object-cover object-top"
-                        />
+                        {prod.images?.[0]?.image_url ? (
+                          <img
+                            src={prod.images[0].image_url}
+                            alt={prod.name}
+                            className="h-11 w-9 rounded object-cover object-top"
+                          />
+                        ) : (
+                          <div className="flex h-11 w-9 items-center justify-center rounded bg-[#F5E7E8] text-[#641B32]">
+                            <Camera className="h-4 w-4" />
+                          </div>
+                        )}
                         <div>
                           <p className="text-xs font-semibold text-[#3D1023]">{prod.name}</p>
                           <p className="text-[11px] text-[#A83F5E]">{prod.fabric}</p>
@@ -263,16 +278,16 @@ export default function StorefrontLayout() {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <Link
                   to="/login"
-                  className="rounded-full bg-[#641B32] px-4 py-1.5 text-xs font-semibold text-[#FFF9F2] transition hover:bg-[#3D1023]"
+                  className="whitespace-nowrap rounded-full bg-[#641B32] px-3 py-1.5 text-xs font-semibold text-[#FFF9F2] transition hover:bg-[#3D1023] sm:px-4"
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/register"
-                  className="hidden rounded-full border border-[#641B32]/40 px-4 py-1.5 text-xs font-semibold text-[#641B32] transition hover:bg-[#F5E7E8] sm:inline-flex"
+                  className="hidden whitespace-nowrap rounded-full border border-[#641B32]/40 px-4 py-1.5 text-xs font-semibold text-[#641B32] transition hover:bg-[#F5E7E8] sm:inline-flex"
                 >
                   Register
                 </Link>

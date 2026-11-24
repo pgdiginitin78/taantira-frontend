@@ -7,8 +7,7 @@ import QuickViewModal from '../components/QuickViewModal';
 import { useAuthStore } from '../store/useAuthStore';
 import {
   FALLBACK_CATEGORIES,
-  FALLBACK_COLLECTIONS,
-  FALLBACK_PRODUCTS,
+  buildFallbackHomepageData,
 } from '../utils/fallbackCatalog';
 
 function SectionHeader({ eyebrow, title, linkTo, linkLabel = 'View All' }) {
@@ -30,41 +29,35 @@ function SectionHeader({ eyebrow, title, linkTo, linkLabel = 'View All' }) {
   );
 }
 
-const buildFallbackHomepage = () => {
-  const sarees = FALLBACK_PRODUCTS.filter((p) => p.primaryCategory?.slug !== 'jewellery');
-  const jewellery = FALLBACK_PRODUCTS.filter((p) => p.primaryCategory?.slug === 'jewellery');
+const getInitialHomepageState = () => {
+  const catalog = buildFallbackHomepageData();
   return {
     banners: [
       {
         id: 1,
         title: 'Heirloom Handloom Sarees',
-        subtitle: '90% Handwoven Banarasi, Kanjivaram, Paithani & Jamdani Sarees • 10% Curated Saree Jewellery',
+        subtitle:
+          '210 curated sarees across 7 Indian craft traditions (including 9-yard Nauvari) paired with heirloom Saree Jewellery.',
         image_url: '/assets/banners/hero-festive.jpg',
         cta_text: 'Explore Sarees',
         cta_link: '/collections/sarees',
       },
     ],
-    categories: FALLBACK_CATEGORIES,
-    collections: FALLBACK_COLLECTIONS,
-    new_arrivals: FALLBACK_PRODUCTS.filter((p) => p.is_new_arrival),
-    best_sellers: FALLBACK_PRODUCTS.filter((p) => p.is_best_seller),
-    trending_products: FALLBACK_PRODUCTS.filter((p) => p.is_trending),
+    ...catalog,
+    best_sellers: [],
+    best_sellers_available: false,
     category_showcases: {
-      sarees,
-      banarasi: sarees.filter((p) => p.primaryCategory?.slug === 'banarasi-sarees'),
-      kanjivaram: sarees.filter((p) => p.primaryCategory?.slug === 'kanjivaram-sarees'),
-      paithani_tussar: sarees.filter((p) => p.primaryCategory?.slug === 'paithani-tussar-sarees'),
-      organza_jamdani: sarees.filter((p) =>
-        ['organza-georgette-sarees', 'jamdani-handloom-sarees'].includes(p.primaryCategory?.slug)
-      ),
-      jewellery,
+      sarees: catalog.handwoven_sarees,
+      nauvari: catalog.nauvari_sarees,
+      jewellery: catalog.jewellery_products,
     },
     customer_reviews: [
       {
         id: 1,
         rating: 5,
         title: 'Exquisite Banarasi craftsmanship',
-        comment: 'The deep burgundy silk glows under evening light without feeling heavy. Custom blouse stitching fit like a dream.',
+        comment:
+          'The deep burgundy silk glows under evening light without feeling heavy. Custom blouse stitching fit like a dream.',
         author: { full_name: 'Ananya Deshmukh' },
         product: { name: 'Aaradhya Deep Burgundy Banarasi Silk Saree', slug: 'aaradhya-burgundy-banarasi-silk-saree' },
       },
@@ -72,7 +65,8 @@ const buildFallbackHomepage = () => {
         id: 2,
         rating: 5,
         title: 'Authentic Kanchipuram lustre',
-        comment: 'Crisp antique gold temple weave and rich berry rose silk drape. Paired it with the Ruhani chandbalis.',
+        comment:
+          'Crisp antique gold temple weave and rich berry rose silk drape. Paired it with the Ruhani chandbalis.',
         author: { full_name: 'Meera Iyer' },
         product: { name: 'Meenakshi Berry Rose Kanjivaram Silk Saree', slug: 'meenakshi-berry-rose-kanjivaram-saree' },
       },
@@ -80,9 +74,13 @@ const buildFallbackHomepage = () => {
         id: 3,
         rating: 5,
         title: 'Featherlight saree earrings',
-        comment: 'The champagne gold chandbali set pairs effortlessly with both Banarasi and Tussar silk weaves.',
+        comment:
+          'The champagne gold chandbali set pairs effortlessly with both Banarasi and Tussar silk weaves.',
         author: { full_name: 'Rhea Kulkarni' },
-        product: { name: 'Ruhani Champagne Gold & Pearl Chandbali Jewellery Set', slug: 'ruhani-champagne-gold-pearl-chandbali-set' },
+        product: {
+          name: 'Ruhani Champagne Gold & Pearl Chandbali Jewellery Set',
+          slug: 'ruhani-champagne-gold-pearl-chandbali-set',
+        },
       },
     ],
   };
@@ -90,7 +88,7 @@ const buildFallbackHomepage = () => {
 
 export default function HomePage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const [data, setData] = useState(buildFallbackHomepage);
+  const [data, setData] = useState(getInitialHomepageState);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [wishlistedIds, setWishlistedIds] = useState(new Set());
 
@@ -125,9 +123,13 @@ export default function HomePage() {
     }
   };
 
-  const hero = data?.banners?.[0] || buildFallbackHomepage().banners[0];
+  const hero = data?.banners?.[0] || getInitialHomepageState().banners[0];
   const categories = data?.categories || FALLBACK_CATEGORIES;
   const showcases = data?.category_showcases || {};
+  const nauvariCategory = categories.find((c) => c.slug === 'nauvari-sarees') || FALLBACK_CATEGORIES.find((c) => c.slug === 'nauvari-sarees');
+  const nauvariSubcategories = nauvariCategory?.children || [];
+  const nauvariList = data?.nauvari_sarees || showcases.nauvari || [];
+  const realBestSellers = data?.best_sellers || [];
 
   return (
     <div className="flex flex-col gap-16 pb-16">
@@ -147,13 +149,19 @@ export default function HomePage() {
                 to="/collections/sarees"
                 className="inline-flex items-center gap-2 rounded-full bg-[#C39A52] px-6 py-3 text-xs font-bold uppercase tracking-wider text-[#3D1023] transition hover:bg-[#D9A0A9]"
               >
-                Explore Sarees (90%) <ArrowRight className="h-4 w-4" />
+                Explore All 210 Sarees <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                to="/collections/nauvari-sarees"
+                className="inline-flex items-center gap-2 rounded-full border border-[#C39A52]/60 bg-[#641B32] px-6 py-3 text-xs font-semibold uppercase tracking-wider text-[#FFF9F2] transition hover:bg-[#A83F5E]"
+              >
+                Nauvari / 9 Vaari
               </Link>
               <Link
                 to="/collections/jewellery"
-                className="inline-flex items-center gap-2 rounded-full border border-[#F5E7E8]/40 px-6 py-3 text-xs font-semibold uppercase tracking-wider text-[#FFF9F2] transition hover:bg-[#641B32]"
+                className="inline-flex items-center gap-2 rounded-full border border-[#F5E7E8]/40 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-[#FFF9F2] transition hover:bg-[#641B32]"
               >
-                <Gem className="h-3.5 w-3.5 text-[#C39A52]" /> Saree Jewellery (10%)
+                <Gem className="h-3.5 w-3.5 text-[#C39A52]" /> Saree Jewellery
               </Link>
             </div>
             <div className="grid grid-cols-2 gap-3 pt-2 text-xs text-[#F5E7E8]/80">
@@ -178,10 +186,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Shop by Saree Weave & Jewellery */}
+      {/* Shop by Saree Weave & Jewellery (All 7 Main Saree Categories + Jewellery) */}
       <section className="mx-auto w-full max-w-7xl px-4 sm:px-6">
-        <SectionHeader eyebrow="90% Sarees • 10% Jewellery" title="Shop by Weave &amp; Craft" linkTo="/collections/all" />
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <SectionHeader
+          eyebrow="7 Main Saree Houses • 42 Subcategories"
+          title="Shop by Weave &amp; Craft"
+          linkTo="/collections/all"
+        />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {categories.map((cat) => (
             <Link
               key={cat.slug}
@@ -195,19 +207,69 @@ export default function HomePage() {
                   className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-105"
                 />
               </div>
-              <div className="p-3 text-center">
-                <p className="text-xs font-semibold text-[#3D1023] group-hover:text-[#641B32] sm:text-sm">{cat.name}</p>
+              <div className="p-3.5 text-center">
+                <p className="text-xs font-semibold text-[#3D1023] group-hover:text-[#641B32] sm:text-sm">
+                  {cat.name}
+                </p>
+                <p className="mt-0.5 text-[11px] text-[#A83F5E]">
+                  {cat.slug === 'jewellery'
+                    ? 'Heirloom Pairing Capsule'
+                    : `${(cat.children || []).length || 5} Subcategories`}
+                </p>
               </div>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* All Signature Sarees (90% Core Catalogue) */}
+      {/* Dedicated Nauvari / 9 Vaari Collection Section */}
+      <section className="border-y border-[#D9A0A9]/40 bg-[#F5E7E8]/55 py-14">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <SectionHeader
+            eyebrow="Dedicated Maharashtrian Nine-Yard Edit"
+            title="Nauvari / 9 Vaari Sarees"
+            linkTo="/collections/nauvari-sarees"
+            linkLabel="Explore All 30 Nauvari Sarees"
+          />
+
+          {nauvariSubcategories.length > 0 && (
+            <div className="mb-8 flex flex-wrap gap-2">
+              {nauvariSubcategories.map((sub) => (
+                <Link
+                  key={sub.slug}
+                  to={`/collections/nauvari-sarees?subcategories=${encodeURIComponent(sub.slug)}`}
+                  className="rounded-full border border-[#641B32]/30 bg-white px-4 py-1.5 text-xs font-semibold text-[#641B32] shadow-sm transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
+                >
+                  {sub.name}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {nauvariList.slice(0, 6).map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onQuickView={setQuickViewProduct}
+                onToggleWishlist={handleToggleWishlist}
+                isWishlisted={wishlistedIds.has(product.id)}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Handwoven Saree Collection */}
       <section className="mx-auto w-full max-w-7xl px-4 sm:px-6">
-        <SectionHeader eyebrow="90% Atelier Focus" title="Handwoven Saree Collection" linkTo="/collections/sarees" linkLabel="Explore All Sarees" />
+        <SectionHeader
+          eyebrow="Photographed Handloom Highlights"
+          title="Handwoven Saree Collection"
+          linkTo="/collections/sarees"
+          linkLabel="Browse All 210 Sarees"
+        />
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {(showcases.sarees || []).slice(0, 8).map((product) => (
+          {(showcases.sarees || data?.handwoven_sarees || []).slice(0, 8).map((product) => (
             <ProductCard
               key={product.id}
               product={product}
@@ -222,10 +284,15 @@ export default function HomePage() {
       {/* Saree Jewellery Pairing Capsule (10% Curated Jewellery) */}
       <section className="bg-[#F5E7E8]/55 py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <SectionHeader eyebrow="10% Curated Capsule" title="Heritage Saree Jewellery" linkTo="/collections/jewellery" linkLabel="View Jewellery" />
+          <SectionHeader
+            eyebrow="10% Curated Capsule"
+            title="Heritage Saree Jewellery"
+            linkTo="/collections/jewellery"
+            linkLabel="View Jewellery"
+          />
           <div className="grid grid-cols-1 items-center gap-8 rounded-3xl border border-[#D9A0A9]/50 bg-white p-6 shadow-sm lg:grid-cols-12">
             <div className="lg:col-span-4">
-              {(showcases.jewellery || []).slice(0, 1).map((product) => (
+              {(showcases.jewellery || data?.jewellery_products || []).slice(0, 1).map((product) => (
                 <ProductCard
                   key={product.id}
                   product={product}
@@ -240,10 +307,10 @@ export default function HomePage() {
                 <Gem className="h-3.5 w-3.5 text-[#C39A52]" /> Curated Saree Pairing
               </span>
               <h3 className="font-serif text-2xl font-bold text-[#3D1023] sm:text-3xl">
-                Designed Exclusively for Silk Drapes
+                Designed Exclusively for Silk &amp; Nauvari Drapes
               </h3>
               <p className="text-sm leading-relaxed text-[#641B32]/85">
-                Ninety percent of Taantira is devoted to heirloom Indian sarees—Banarasi, Kanjivaram, Paithani, Tussar, Organza, and Jamdani. The remaining ten percent is our finishing touch: handcrafted champagne-gold and pearl jewellery designed never to snag delicate silk weaves.
+                Ninety percent of Taantira is devoted to heirloom Indian sarees—Banarasi, Kanjivaram, Paithani, Tussar, Organza, Jamdani, Nauvari, and Regional Handlooms. Our Heritage Jewellery capsule completes every drape with filigree champagne gold, pearls, and regional ornaments without snagging delicate silk weaves.
               </p>
               <div className="flex flex-wrap gap-3 pt-1">
                 <Link
@@ -253,10 +320,10 @@ export default function HomePage() {
                   Shop Saree Jewellery <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
                 <Link
-                  to="/collections/best-sellers"
+                  to="/collections/nauvari-sarees"
                   className="inline-flex items-center gap-2 rounded-full border border-[#641B32]/30 px-5 py-2.5 text-xs font-semibold text-[#641B32] hover:bg-[#F5E7E8]"
                 >
-                  Best Selling Sarees
+                  Explore Nauvari Edit
                 </Link>
               </div>
             </div>
@@ -264,20 +331,31 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Best Sellers */}
+      {/* Best Selling Sarees (Strictly backed by real sales data) */}
       <section className="mx-auto w-full max-w-7xl px-4 sm:px-6">
-        <SectionHeader eyebrow="Patron Favorites" title="Best Selling Sarees &amp; Accents" linkTo="/collections/best-sellers" />
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {(data?.best_sellers || []).slice(0, 4).map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onQuickView={setQuickViewProduct}
-              onToggleWishlist={handleToggleWishlist}
-              isWishlisted={wishlistedIds.has(product.id)}
-            />
-          ))}
-        </div>
+        <SectionHeader
+          eyebrow="Verified Order Metrics"
+          title="Best Selling Sarees"
+          linkTo="/collections/sarees"
+          linkLabel="View Full Catalogue"
+        />
+        {realBestSellers.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {realBestSellers.slice(0, 4).map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onQuickView={setQuickViewProduct}
+                onToggleWishlist={handleToggleWishlist}
+                isWishlisted={wishlistedIds.has(product.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-[#D9A0A9]/50 bg-white p-6 text-sm text-[#641B32]/85">
+            Best Selling Sarees populate automatically from live customer orders placed in Taantira&apos;s backend database (products with zero recorded sales are never artificially marked as best sellers).
+          </div>
+        )}
       </section>
 
       {/* Customer Reviews */}

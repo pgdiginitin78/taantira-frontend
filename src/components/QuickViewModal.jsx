@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, IconButton, Button } from '@mui/material';
-import { X, ShoppingBag, ArrowRight } from 'lucide-react';
+import { X, ShoppingBag, ArrowRight, Camera } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatINR } from '../utils/formatters';
 import { useCartStore } from '../store/useCartStore';
@@ -18,7 +18,7 @@ export default function QuickViewModal({ product, open, onClose }) {
 
   const variants = product.variants || [];
   const selectedVariant = variants.find((v) => v.id === selectedVariantId) || variants[0] || null;
-  const primaryImage = product.images?.[0]?.image_url || '/assets/products/saree-burgundy.jpg';
+  const primaryImage = product.images?.[0]?.image_url || null;
   const price = selectedVariant?.price_override || product.sale_price || product.base_price;
 
   const handleAddToBag = async () => {
@@ -51,7 +51,15 @@ export default function QuickViewModal({ product, open, onClose }) {
       <DialogContent className="bg-[#FFF9F2] p-6">
         <div className="grid grid-cols-1 gap-6 pt-3 md:grid-cols-2">
           <div className="aspect-[3/4] overflow-hidden rounded-xl bg-[#F5E7E8]">
-            <img src={primaryImage} alt={product.name} className="h-full w-full object-cover object-top" />
+            {primaryImage ? (
+              <img src={primaryImage} alt={product.name} className="h-full w-full object-cover object-top" />
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center p-6 text-center text-[#641B32]">
+                <Camera className="h-8 w-8 text-[#A83F5E]" />
+                <p className="mt-2 text-xs font-semibold uppercase tracking-wider">Image Needed (0/5 Angles)</p>
+                <p className="mt-1 text-xs text-[#3D1023]/75">{product.fabric}</p>
+              </div>
+            )}
           </div>
           <div className="flex flex-col justify-between space-y-4">
             <div className="space-y-3">
