@@ -12,7 +12,7 @@ import {
   TextField,
 } from '@mui/material';
 import { FolderTree, Pencil, PlusCircle, ShieldAlert, Trash2, Upload, Layers } from 'lucide-react';
-import api from '../../services/api';
+import api, { API_ORIGIN } from '../../services/api';
 import DataTable from '../../components/DataTable';
 
 const categoryFormSchema = yup.object({
@@ -116,8 +116,7 @@ export default function AdminCategoriesPage() {
       const res = await api.post('/media/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const apiBase = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace(/\/api$/, '');
-      setValue('image_url', `${apiBase}${res.data.data.url}`);
+      setValue('image_url', `${API_ORIGIN}${res.data.data.url}`);
       setMsg('Category banner uploaded securely to MySQL.');
     } catch (uploadErr) {
       setErr(uploadErr.response?.data?.message || 'Upload failed.');

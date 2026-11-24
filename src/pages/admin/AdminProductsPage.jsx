@@ -5,7 +5,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { TextField, Button, MenuItem, Alert } from '@mui/material';
 import { Camera, ExternalLink, Pencil, PlusCircle, ShieldAlert, Trash2, Upload } from 'lucide-react';
-import api from '../../services/api';
+import api, { API_ORIGIN } from '../../services/api';
 import DataTable from '../../components/DataTable';
 import { formatINR } from '../../utils/formatters';
 import { REQUIRED_IMAGE_ANGLES } from '../../data/sareeCatalogueData';
@@ -138,8 +138,7 @@ export default function AdminProductsPage() {
       const res = await api.post('/media/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const apiBase = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api').replace(/\/api$/, '');
-      const uploadedUrl = `${apiBase}${res.data.data.url}`;
+      const uploadedUrl = `${API_ORIGIN}${res.data.data.url}`;
       setAngleSlots((prev) =>
         prev.map((slot, idx) => (idx === slotIndex ? { ...slot, image_url: uploadedUrl } : slot))
       );

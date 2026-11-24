@@ -4,10 +4,11 @@
 # Dependencies
 node_modules/
 
-# Environment variables
+# Environment variables (keep local URLs & local secrets out of Git)
 .env
 .env.*
 !.env.example
+!.env.production
 
 # Build & deployment
 dist/

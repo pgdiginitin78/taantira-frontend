@@ -18,7 +18,7 @@ import {
 } from "recharts";
 import { Download, RefreshCw, AlertTriangle } from "lucide-react";
 import { Button, TextField } from "@mui/material";
-import api, { getAuthToken } from "../../services/api";
+import api, { API_BASE_URL, getAuthToken } from "../../services/api";
 import { formatINR } from "../../utils/formatters";
 
 const CHART_COLORS = [
@@ -94,9 +94,7 @@ export default function AdminDashboardPage() {
   }, [startDate, endDate]);
 
   const downloadCsv = async (type) => {
-    const baseUrl =
-      import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-    const response = await fetch(`${baseUrl}/reports/export/${type}`, {
+    const response = await fetch(`${API_BASE_URL}/reports/export/${type}`, {
       headers: { Authorization: `Bearer ${getAuthToken()}` },
     });
     const blob = await response.blob();

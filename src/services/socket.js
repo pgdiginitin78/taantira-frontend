@@ -1,7 +1,11 @@
 import { io } from 'socket.io-client';
 import { getAuthToken } from './api';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+const DEFAULT_SOCKET_URL = import.meta.env.PROD
+  ? 'https://taantira-backend.vercel.app'
+  : 'http://localhost:5000';
+
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || DEFAULT_SOCKET_URL;
 
 let socketInstance = null;
 

@@ -1,7 +1,13 @@
 import axios from "axios";
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+const DEFAULT_API_BASE_URL = import.meta.env.PROD
+  ? "https://taantira-backend.vercel.app/api"
+  : "http://localhost:5000/api";
+
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL;
+
+export const API_ORIGIN = API_BASE_URL.replace(/\/api$/, "");
 
 let accessTokenMemory = localStorage.getItem("taantira_access_token") || null;
 
