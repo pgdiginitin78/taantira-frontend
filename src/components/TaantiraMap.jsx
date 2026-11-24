@@ -2,10 +2,13 @@ import { useEffect, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
-import 'maplibre-gl';
+import { setWorkerUrl } from 'maplibre-gl';
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import '@maplibre/maplibre-gl-leaflet';
 import { MapContainer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { MAP_CONFIG } from '../config/mapConfig';
+
+setWorkerUrl(maplibreWorkerUrl);
 
 const createPinIcon = (label, bgClass = 'bg-[#641B32]') =>
   L.divIcon({
