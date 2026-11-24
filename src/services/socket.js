@@ -6,10 +6,14 @@ const DEFAULT_SOCKET_URL = import.meta.env.PROD
   : 'http://localhost:5000';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || DEFAULT_SOCKET_URL;
+const IS_SERVERLESS_VERCEL =
+  SOCKET_URL.includes('.vercel.app') && import.meta.env.VITE_ENABLE_VERCEL_SOCKET !== 'true';
 
 let socketInstance = null;
 
 export const connectSocket = () => {
+  if (IS_SERVERLESS_VERCEL) return null;
+
   const token = getAuthToken();
   if (!token) return null;
 
@@ -21,7 +25,7 @@ export const connectSocket = () => {
     auth: { token },
     withCredentials: true,
     reconnection: true,
-    reconnectionAttempts: Infinity,
+    reconnectionAttempts: 5,
     reconnectionDelay: 2000,
   });
 
