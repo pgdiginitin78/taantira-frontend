@@ -48,7 +48,7 @@ export default function AccountProfilePage() {
       <form onSubmit={handleSubmit(onSubmit)} className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Controller name="full_name" control={control} render={({ field }) => <TextField {...field} label="Full Name" error={Boolean(errors.full_name)} helperText={errors.full_name?.message} />} />
         <Controller name="phone" control={control} render={({ field }) => <TextField {...field} label="Phone Number" error={Boolean(errors.phone)} helperText={errors.phone?.message} />} />
-        <Controller name="date_of_birth" control={control} render={({ field }) => <TextField {...field} type="date" label="Date of Birth" InputLabelProps={{ shrink: true }} />} />
+        <Controller name="date_of_birth" control={control} render={({ field }) => <TextField {...field} type="date" label="Date of Birth" slotProps={{ inputLabel: { shrink: true } }} />} />
         <Controller name="preferred_size" control={control} render={({ field }) => <TextField {...field} label="Preferred Size (e.g. S, M, L)" />} />
         <div className="sm:col-span-2">
           <Controller

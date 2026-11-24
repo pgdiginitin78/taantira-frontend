@@ -229,10 +229,10 @@ export default function CheckoutPage() {
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
         <div className="rounded-3xl border border-[#D9A0A9]/40 bg-white p-6 shadow-sm lg:col-span-8">
-          <form onSubmit={handleSubmit(onPlaceOrder)} className="space-y-6">
+          <form onSubmit={handleSubmit(onPlaceOrder)} className="flex flex-col gap-6">
             {/* Step 1: Customer Details */}
             {activeStep === 0 && (
-              <div className="space-y-4">
+              <div className="flex flex-col gap-4">
                 <h2 className="text-lg font-bold text-[#3D1023]">
                   1. Customer Details
                 </h2>

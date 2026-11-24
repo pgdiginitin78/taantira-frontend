@@ -332,7 +332,7 @@ export default function AccountOrderDetailPage() {
         {!['shipped', 'delivered', 'cancelled', 'returned'].includes(order.status) && (
           <div className="rounded-2xl border border-[#D9A0A9]/40 bg-white p-6 shadow-sm">
             <h3 className="text-base font-bold text-[#3D1023]">Cancel Order</h3>
-            <form onSubmit={cancelForm.handleSubmit(onCancelOrder)} className="mt-3 space-y-3">
+            <form onSubmit={cancelForm.handleSubmit(onCancelOrder)} className="mt-3 flex flex-col gap-3">
               <Controller
                 name="reason"
                 control={cancelForm.control}
@@ -357,7 +357,7 @@ export default function AccountOrderDetailPage() {
         {order.status === 'delivered' && (
           <div className="rounded-2xl border border-[#D9A0A9]/40 bg-white p-6 shadow-sm">
             <h3 className="text-base font-bold text-[#3D1023]">Request Return / Exchange</h3>
-            <form onSubmit={returnForm.handleSubmit(onRequestReturn)} className="mt-3 space-y-3">
+            <form onSubmit={returnForm.handleSubmit(onRequestReturn)} className="mt-3 flex flex-col gap-3">
               <Controller
                 name="request_type"
                 control={returnForm.control}

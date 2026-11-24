@@ -16,12 +16,16 @@ export const registerValidationSchema = yup.object({
   phone: yup
     .string()
     .trim()
-    .matches(/^[0-9+\-\s]{8,15}$/, "Enter a valid phone number")
-    .required("Phone number is required"),
+    .matches(/^[0-9+\-\s]{10,15}$/, "Enter a valid 10-digit mobile number")
+    .required("Mobile number is required"),
   password: yup
     .string()
     .min(8, "Password must be at least 8 characters")
     .required("Password is required"),
+  confirm_password: yup
+    .string()
+    .oneOf([yup.ref("password")], "Passwords must match")
+    .required("Confirm your password"),
 });
 
 export const loginValidationSchema = yup.object({

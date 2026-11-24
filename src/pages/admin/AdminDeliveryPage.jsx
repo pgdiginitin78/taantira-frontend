@@ -161,9 +161,9 @@ export default function AdminDeliveryPage() {
 
       {/* Assign Partner & Manual Courier Booking */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="space-y-4 rounded-2xl border border-[#D9A0A9]/40 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4 rounded-2xl border border-[#D9A0A9]/40 bg-white p-6 shadow-sm">
           <h2 className="text-base font-bold text-[#3D1023]">Assign Order to Own Delivery Partner</h2>
-          <div className="space-y-3">
+          <div className="flex flex-col gap-3">
             <TextField
               select
               size="small"
@@ -217,7 +217,7 @@ export default function AdminDeliveryPage() {
             <Controller name="courier_company" control={courierForm.control} render={({ field }) => <TextField {...field} size="small" label="Courier Company" error={Boolean(courierForm.formState.errors.courier_company)} helperText={courierForm.formState.errors.courier_company?.message} />} />
             <Controller name="awb_number" control={courierForm.control} render={({ field }) => <TextField {...field} size="small" label="AWB Number" error={Boolean(courierForm.formState.errors.awb_number)} helperText={courierForm.formState.errors.awb_number?.message} />} />
             <Controller name="tracking_url" control={courierForm.control} render={({ field }) => <TextField {...field} size="small" label="Tracking URL (Optional)" error={Boolean(courierForm.formState.errors.tracking_url)} helperText={courierForm.formState.errors.tracking_url?.message} />} />
-            <Controller name="pickup_date" control={courierForm.control} render={({ field }) => <TextField {...field} size="small" type="date" label="Pickup Date" InputLabelProps={{ shrink: true }} />} />
+            <Controller name="pickup_date" control={courierForm.control} render={({ field }) => <TextField {...field} size="small" type="date" label="Pickup Date" slotProps={{ inputLabel: { shrink: true } }} />} />
             <Button type="submit" variant="contained" color="secondary">
               Save Courier AWB
             </Button>

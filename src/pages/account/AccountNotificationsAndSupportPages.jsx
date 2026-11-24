@@ -91,7 +91,7 @@ export function AccountReviewsSupportPage() {
       <div className="rounded-2xl border border-[#D9A0A9]/40 bg-white p-6 shadow-sm">
         <h2 className="text-base font-bold text-[#3D1023]">Open a Concierge Support Ticket</h2>
         {msg && <Alert severity="success" className="mt-3">{msg}</Alert>}
-        <form onSubmit={handleSubmit(onCreateTicket)} className="mt-4 space-y-3">
+        <form onSubmit={handleSubmit(onCreateTicket)} className="mt-4 flex flex-col gap-3">
           <Controller name="subject" control={control} render={({ field }) => <TextField {...field} size="small" fullWidth label="Subject" error={Boolean(errors.subject)} helperText={errors.subject?.message} />} />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Controller

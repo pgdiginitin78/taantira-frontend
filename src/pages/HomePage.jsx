@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Star, Sparkles, ShieldCheck, Truck } from 'lucide-react';
+import { ArrowRight, Star, Sparkles, ShieldCheck, Truck, Gem } from 'lucide-react';
 import api from '../services/api';
 import ProductCard from '../components/ProductCard';
 import QuickViewModal from '../components/QuickViewModal';
@@ -30,66 +30,83 @@ function SectionHeader({ eyebrow, title, linkTo, linkLabel = 'View All' }) {
   );
 }
 
+const buildFallbackHomepage = () => {
+  const sarees = FALLBACK_PRODUCTS.filter((p) => p.primaryCategory?.slug !== 'jewellery');
+  const jewellery = FALLBACK_PRODUCTS.filter((p) => p.primaryCategory?.slug === 'jewellery');
+  return {
+    banners: [
+      {
+        id: 1,
+        title: 'Heirloom Handloom Sarees',
+        subtitle: '90% Handwoven Banarasi, Kanjivaram, Paithani & Jamdani Sarees • 10% Curated Saree Jewellery',
+        image_url: '/assets/banners/hero-festive.jpg',
+        cta_text: 'Explore Sarees',
+        cta_link: '/collections/sarees',
+      },
+    ],
+    categories: FALLBACK_CATEGORIES,
+    collections: FALLBACK_COLLECTIONS,
+    new_arrivals: FALLBACK_PRODUCTS.filter((p) => p.is_new_arrival),
+    best_sellers: FALLBACK_PRODUCTS.filter((p) => p.is_best_seller),
+    trending_products: FALLBACK_PRODUCTS.filter((p) => p.is_trending),
+    category_showcases: {
+      sarees,
+      banarasi: sarees.filter((p) => p.primaryCategory?.slug === 'banarasi-sarees'),
+      kanjivaram: sarees.filter((p) => p.primaryCategory?.slug === 'kanjivaram-sarees'),
+      paithani_tussar: sarees.filter((p) => p.primaryCategory?.slug === 'paithani-tussar-sarees'),
+      organza_jamdani: sarees.filter((p) =>
+        ['organza-georgette-sarees', 'jamdani-handloom-sarees'].includes(p.primaryCategory?.slug)
+      ),
+      jewellery,
+    },
+    customer_reviews: [
+      {
+        id: 1,
+        rating: 5,
+        title: 'Exquisite Banarasi craftsmanship',
+        comment: 'The deep burgundy silk glows under evening light without feeling heavy. Custom blouse stitching fit like a dream.',
+        author: { full_name: 'Ananya Deshmukh' },
+        product: { name: 'Aaradhya Deep Burgundy Banarasi Silk Saree', slug: 'aaradhya-burgundy-banarasi-silk-saree' },
+      },
+      {
+        id: 2,
+        rating: 5,
+        title: 'Authentic Kanchipuram lustre',
+        comment: 'Crisp antique gold temple weave and rich berry rose silk drape. Paired it with the Ruhani chandbalis.',
+        author: { full_name: 'Meera Iyer' },
+        product: { name: 'Meenakshi Berry Rose Kanjivaram Silk Saree', slug: 'meenakshi-berry-rose-kanjivaram-saree' },
+      },
+      {
+        id: 3,
+        rating: 5,
+        title: 'Featherlight saree earrings',
+        comment: 'The champagne gold chandbali set pairs effortlessly with both Banarasi and Tussar silk weaves.',
+        author: { full_name: 'Rhea Kulkarni' },
+        product: { name: 'Ruhani Champagne Gold & Pearl Chandbali Jewellery Set', slug: 'ruhani-champagne-gold-pearl-chandbali-set' },
+      },
+    ],
+  };
+};
+
 export default function HomePage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const [data, setData] = useState(null);
-  const [offlinePreview, setOfflinePreview] = useState(false);
+  const [data, setData] = useState(buildFallbackHomepage);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [wishlistedIds, setWishlistedIds] = useState(new Set());
 
   useEffect(() => {
+    let active = true;
     api
       .get('/products/homepage')
       .then((res) => {
-        setData(res.data?.data);
-        setOfflinePreview(false);
+        if (active && res.data?.data?.categories?.length) {
+          setData(res.data.data);
+        }
       })
-      .catch(() => {
-        setOfflinePreview(true);
-        setData({
-          banners: [
-            {
-              id: 1,
-              title: 'The Festive Heritage Edit',
-              subtitle: 'Handwoven Banarasi Silks, Organza Drapes & Heirloom Lehengas',
-              image_url: '/assets/banners/hero-festive.jpg',
-              cta_text: 'Explore Festive Collection',
-              cta_link: '/collections/festive-collections',
-            },
-          ],
-          categories: FALLBACK_CATEGORIES,
-          collections: FALLBACK_COLLECTIONS,
-          new_arrivals: FALLBACK_PRODUCTS.filter((p) => p.is_new_arrival),
-          best_sellers: FALLBACK_PRODUCTS.filter((p) => p.is_best_seller),
-          trending_products: FALLBACK_PRODUCTS.filter((p) => p.is_trending),
-          category_showcases: {
-            sarees: FALLBACK_PRODUCTS.filter((p) => p.primaryCategory?.slug === 'sarees'),
-            dresses: FALLBACK_PRODUCTS.filter((p) => p.primaryCategory?.slug === 'dresses'),
-            kurtas: FALLBACK_PRODUCTS.filter((p) => p.primaryCategory?.slug === 'kurtas'),
-            suits: FALLBACK_PRODUCTS.filter((p) => p.primaryCategory?.slug === 'suits'),
-            lehengas: FALLBACK_PRODUCTS.filter((p) => p.primaryCategory?.slug === 'lehengas'),
-            accessories: FALLBACK_PRODUCTS.filter((p) => p.primaryCategory?.slug === 'accessories'),
-          },
-          customer_reviews: [
-            {
-              id: 1,
-              rating: 5,
-              title: 'Exquisite Banarasi craftsmanship',
-              comment: 'The deep burgundy silk glows under evening light without feeling heavy.',
-              author: { full_name: 'Ananya Deshmukh' },
-              product: { name: 'Aaradhya Deep Burgundy Banarasi Silk Saree', slug: 'aaradhya-burgundy-banarasi-silk-saree' },
-            },
-            {
-              id: 2,
-              rating: 5,
-              title: 'Effortless evening drape',
-              comment: 'Soft mulberry lining, zero sheerness, and rich berry tones.',
-              author: { full_name: 'Meera Iyer' },
-              product: { name: 'Meher Berry Rose Pleated Silk-Georgette Dress', slug: 'meher-berry-rose-pleated-silk-georgette-dress' },
-            },
-          ],
-        });
-      });
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleToggleWishlist = async (product) => {
@@ -108,53 +125,40 @@ export default function HomePage() {
     }
   };
 
-  const hero = data?.banners?.[0] || {
-    title: 'The Festive Heritage Edit',
-    subtitle: 'Handwoven Banarasi Silks, Organza Drapes & Heirloom Lehengas',
-    image_url: '/assets/banners/hero-festive.jpg',
-    cta_text: 'Explore Festive Collection',
-    cta_link: '/collections/festive-collections',
-  };
-
+  const hero = data?.banners?.[0] || buildFallbackHomepage().banners[0];
   const categories = data?.categories || FALLBACK_CATEGORIES;
   const showcases = data?.category_showcases || {};
 
   return (
-    <div className="space-y-16 pb-16">
-      {offlinePreview && (
-        <div className="bg-[#F5E7E8] px-4 py-2 text-center text-xs font-medium text-[#641B32]">
-          Previewing local seeded Taantira catalog (start MySQL Community Edition and run backend migrations/seeders for live database sync).
-        </div>
-      )}
-
+    <div className="flex flex-col gap-16 pb-16">
       {/* Hero Banner */}
       <section className="relative overflow-hidden bg-[#3D1023]">
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-8 px-4 py-10 sm:px-6 lg:grid-cols-12 lg:py-14">
-          <div className="space-y-5 text-[#FFF9F2] lg:col-span-5">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#C39A52]/50 bg-[#641B32] px-3.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-[#C39A52]">
-              <Sparkles className="h-3.5 w-3.5" /> Taantira Atelier 2026
+          <div className="flex flex-col gap-5 text-[#FFF9F2] lg:col-span-5">
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[#C39A52]/50 bg-[#641B32] px-3.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-[#C39A52]">
+              <Sparkles className="h-3.5 w-3.5" /> Taantira Saree Atelier 2026
             </span>
             <h1 className="font-serif text-4xl font-bold leading-tight text-[#FFF9F2] sm:text-5xl">
               {hero.title}
             </h1>
             <p className="text-sm leading-relaxed text-[#F5E7E8]/90 sm:text-base">{hero.subtitle}</p>
-            <div className="flex flex-wrap gap-3 pt-2">
+            <div className="flex flex-wrap gap-3 pt-1">
               <Link
-                to={hero.cta_link || '/collections/festive-collections'}
+                to="/collections/sarees"
                 className="inline-flex items-center gap-2 rounded-full bg-[#C39A52] px-6 py-3 text-xs font-bold uppercase tracking-wider text-[#3D1023] transition hover:bg-[#D9A0A9]"
               >
-                {hero.cta_text || 'Explore Collection'} <ArrowRight className="h-4 w-4" />
+                Explore Sarees (90%) <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
-                to="/collections/new-arrivals"
+                to="/collections/jewellery"
                 className="inline-flex items-center gap-2 rounded-full border border-[#F5E7E8]/40 px-6 py-3 text-xs font-semibold uppercase tracking-wider text-[#FFF9F2] transition hover:bg-[#641B32]"
               >
-                Shop New Arrivals
+                <Gem className="h-3.5 w-3.5 text-[#C39A52]" /> Saree Jewellery (10%)
               </Link>
             </div>
-            <div className="grid grid-cols-2 gap-3 pt-4 text-xs text-[#F5E7E8]/80">
+            <div className="grid grid-cols-2 gap-3 pt-2 text-xs text-[#F5E7E8]/80">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-[#C39A52]" /> Authentic Handloom Silk
+                <ShieldCheck className="h-4 w-4 text-[#C39A52]" /> Pure Handloom Silk Mark
               </div>
               <div className="flex items-center gap-2">
                 <Truck className="h-4 w-4 text-[#C39A52]" /> Live OTP-Verified Delivery
@@ -174,9 +178,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Shop by Category */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6">
-        <SectionHeader eyebrow="Curated Silhouettes" title="Shop by Category" linkTo="/collections/all" />
+      {/* Shop by Saree Weave & Jewellery */}
+      <section className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+        <SectionHeader eyebrow="90% Sarees • 10% Jewellery" title="Shop by Weave &amp; Craft" linkTo="/collections/all" />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {categories.map((cat) => (
             <Link
@@ -192,18 +196,18 @@ export default function HomePage() {
                 />
               </div>
               <div className="p-3 text-center">
-                <p className="text-sm font-semibold text-[#3D1023] group-hover:text-[#641B32]">{cat.name}</p>
+                <p className="text-xs font-semibold text-[#3D1023] group-hover:text-[#641B32] sm:text-sm">{cat.name}</p>
               </div>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* New Arrivals */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6">
-        <SectionHeader eyebrow="Just Arrived" title="New Arrivals" linkTo="/collections/new-arrivals" />
+      {/* All Signature Sarees (90% Core Catalogue) */}
+      <section className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+        <SectionHeader eyebrow="90% Atelier Focus" title="Handwoven Saree Collection" linkTo="/collections/sarees" linkLabel="Explore All Sarees" />
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {(data?.new_arrivals || []).slice(0, 4).map((product) => (
+          {(showcases.sarees || []).slice(0, 8).map((product) => (
             <ProductCard
               key={product.id}
               product={product}
@@ -215,29 +219,56 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Best Sellers */}
-      <section className="bg-[#F5E7E8]/45 py-14">
+      {/* Saree Jewellery Pairing Capsule (10% Curated Jewellery) */}
+      <section className="bg-[#F5E7E8]/55 py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <SectionHeader eyebrow="Atelier Signatures" title="Best Sellers" linkTo="/collections/best-sellers" />
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {(data?.best_sellers || []).slice(0, 4).map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onQuickView={setQuickViewProduct}
-                onToggleWishlist={handleToggleWishlist}
-                isWishlisted={wishlistedIds.has(product.id)}
-              />
-            ))}
+          <SectionHeader eyebrow="10% Curated Capsule" title="Heritage Saree Jewellery" linkTo="/collections/jewellery" linkLabel="View Jewellery" />
+          <div className="grid grid-cols-1 items-center gap-8 rounded-3xl border border-[#D9A0A9]/50 bg-white p-6 shadow-sm lg:grid-cols-12">
+            <div className="lg:col-span-4">
+              {(showcases.jewellery || []).slice(0, 1).map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onQuickView={setQuickViewProduct}
+                  onToggleWishlist={handleToggleWishlist}
+                  isWishlisted={wishlistedIds.has(product.id)}
+                />
+              ))}
+            </div>
+            <div className="flex flex-col gap-4 lg:col-span-8 lg:px-6">
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#F5E7E8] px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-[#641B32]">
+                <Gem className="h-3.5 w-3.5 text-[#C39A52]" /> Curated Saree Pairing
+              </span>
+              <h3 className="font-serif text-2xl font-bold text-[#3D1023] sm:text-3xl">
+                Designed Exclusively for Silk Drapes
+              </h3>
+              <p className="text-sm leading-relaxed text-[#641B32]/85">
+                Ninety percent of Taantira is devoted to heirloom Indian sarees—Banarasi, Kanjivaram, Paithani, Tussar, Organza, and Jamdani. The remaining ten percent is our finishing touch: handcrafted champagne-gold and pearl jewellery designed never to snag delicate silk weaves.
+              </p>
+              <div className="flex flex-wrap gap-3 pt-1">
+                <Link
+                  to="/collections/jewellery"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#641B32] px-5 py-2.5 text-xs font-semibold text-[#FFF9F2] hover:bg-[#3D1023]"
+                >
+                  Shop Saree Jewellery <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+                <Link
+                  to="/collections/best-sellers"
+                  className="inline-flex items-center gap-2 rounded-full border border-[#641B32]/30 px-5 py-2.5 text-xs font-semibold text-[#641B32] hover:bg-[#F5E7E8]"
+                >
+                  Best Selling Sarees
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Trending & Festive Collections */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6">
-        <SectionHeader eyebrow="Trending Now" title="Trending & Festive Highlights" linkTo="/collections/festive-collections" />
+      {/* Best Sellers */}
+      <section className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+        <SectionHeader eyebrow="Patron Favorites" title="Best Selling Sarees &amp; Accents" linkTo="/collections/best-sellers" />
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {(data?.trending_products || []).slice(0, 4).map((product) => (
+          {(data?.best_sellers || []).slice(0, 4).map((product) => (
             <ProductCard
               key={product.id}
               product={product}
@@ -249,40 +280,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Category Spotlights: Sarees, Dresses, Kurtas, Suits, Lehengas, Accessories */}
-      <section className="mx-auto max-w-7xl space-y-12 px-4 sm:px-6">
-        {[
-          { key: 'sarees', title: 'Heirloom Sarees', eyebrow: 'Banarasi & Organza' },
-          { key: 'lehengas', title: 'Celebratory Lehengas', eyebrow: 'Bridal & Mehendi' },
-          { key: 'suits', title: 'Anarkali & Palazzo Suits', eyebrow: 'Evening Couture' },
-          { key: 'kurtas', title: 'Chanderi Kurta Sets', eyebrow: 'Daytime Poise' },
-          { key: 'dresses', title: 'Modern Silk Dresses', eyebrow: 'Fluid Drapes' },
-          { key: 'accessories', title: 'Silk Potlis & Brass Accents', eyebrow: 'Finishing Touches' },
-        ].map(({ key, title, eyebrow }) => {
-          const items = showcases[key] || [];
-          if (items.length === 0) return null;
-          return (
-            <div key={key}>
-              <SectionHeader eyebrow={eyebrow} title={title} linkTo={`/collections/${key}`} />
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                {items.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onQuickView={setQuickViewProduct}
-                    onToggleWishlist={handleToggleWishlist}
-                    isWishlisted={wishlistedIds.has(product.id)}
-                  />
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </section>
-
       {/* Customer Reviews */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6">
-        <SectionHeader eyebrow="Client Voices" title="Verified Customer Reviews" />
+      <section className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+        <SectionHeader eyebrow="Client Voices" title="Verified Patron Reviews" />
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {(data?.customer_reviews || []).slice(0, 3).map((review) => (
             <div key={review.id} className="rounded-2xl border border-[#D9A0A9]/40 bg-white p-6 shadow-sm">

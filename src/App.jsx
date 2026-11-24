@@ -66,12 +66,10 @@ export default function App() {
     <ThemeProvider theme={taantiraTheme}>
       <BrowserRouter>
         <Routes>
-          {/* Preserved Vite Starter UI at / per user selection */}
-          <Route path="/" element={<StarterPage />} />
-
-          {/* Storefront Routes */}
+          {/* Taantira Sarees & Jewellery Storefront directly at / */}
           <Route element={<StorefrontLayout />}>
-            <Route path="/store" element={<HomePage />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/store" element={<Navigate to="/" replace />} />
             <Route path="/collections/:slug" element={<CollectionPage />} />
             <Route path="/products/:slug" element={<ProductDetailPage />} />
             <Route path="/cart" element={<CartPage />} />
@@ -108,6 +106,9 @@ export default function App() {
             </Route>
           </Route>
 
+          {/* Preserved original Vite starter page */}
+          <Route path="/starter" element={<StarterPage />} />
+
           {/* Delivery Partner Web Portal */}
           <Route path="/delivery" element={<DeliveryPortalPage />} />
 
@@ -133,7 +134,7 @@ export default function App() {
             <Route path="settings" element={<AdminSettingsPage />} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/store" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

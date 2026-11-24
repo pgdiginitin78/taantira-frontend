@@ -160,7 +160,7 @@ export default function AdminCouponsPage() {
                 size="small"
                 type="date"
                 label="Starts"
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true } }}
               />
             )}
           />
@@ -173,7 +173,7 @@ export default function AdminCouponsPage() {
                 size="small"
                 type="date"
                 label="Expires"
-                InputLabelProps={{ shrink: true }}
+                slotProps={{ inputLabel: { shrink: true } }}
               />
             )}
           />

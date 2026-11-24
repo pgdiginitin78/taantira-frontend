@@ -10,19 +10,28 @@ import {
   User,
   Menu,
   X,
-  ShieldCheck,
-  Truck,
   LogOut,
   Sparkles,
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
 import { useCartStore } from '../store/useCartStore';
-import { FALLBACK_CATEGORIES } from '../utils/fallbackCatalog';
 
 const newsletterSchema = yup.object({
   email: yup.string().trim().lowercase().email('Enter a valid email address').required('Email is required'),
 });
+
+const STORE_NAV_LINKS = [
+  { to: '/collections/new-arrivals', label: 'New Arrivals', accent: 'text-[#A83F5E]' },
+  { to: '/collections/sarees', label: 'All Sarees (90%)', accent: 'text-[#641B32] font-bold' },
+  { to: '/collections/banarasi-sarees', label: 'Banarasi', accent: 'text-[#3D1023]' },
+  { to: '/collections/kanjivaram-sarees', label: 'Kanjivaram', accent: 'text-[#3D1023]' },
+  { to: '/collections/paithani-tussar-sarees', label: 'Paithani & Tussar', accent: 'text-[#3D1023]' },
+  { to: '/collections/organza-georgette-sarees', label: 'Organza & Georgette', accent: 'text-[#3D1023]' },
+  { to: '/collections/jamdani-handloom-sarees', label: 'Jamdani & Chanderi', accent: 'text-[#3D1023]' },
+  { to: '/collections/jewellery', label: 'Saree Jewellery (10%)', accent: 'text-[#C39A52]' },
+  { to: '/collections/festive-collections', label: 'Festive Edit', accent: 'text-[#3D1023]' },
+];
 
 export default function StorefrontLayout() {
   const navigate = useNavigate();
@@ -33,7 +42,7 @@ export default function StorefrontLayout() {
   const [suggestions, setSuggestions] = useState({ products: [], categories: [] });
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [promoText, setPromoText] = useState(
-    'Complimentary insured shipping above Rs 2,999 • Use code TAANTIRA10 for 10% welcome privilege'
+    'Complimentary insured shipping on sarees above Rs 2,999 • Use code TAANTIRA10 for 10% welcome privilege'
   );
   const [newsletterMsg, setNewsletterMsg] = useState('');
 
@@ -89,7 +98,7 @@ export default function StorefrontLayout() {
     setNewsletterMsg('');
     try {
       const res = await api.post('/users/newsletter', values);
-      setNewsletterMsg(res.data?.message || 'Welcome to Taantira Atelier updates.');
+      setNewsletterMsg(res.data?.message || 'Welcome to Taantira Saree Atelier.');
       reset();
     } catch (err) {
       setNewsletterMsg(err.response?.data?.message || 'Unable to subscribe right now.');
@@ -122,12 +131,12 @@ export default function StorefrontLayout() {
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
-            <Link to="/store" className="flex flex-col">
+            <Link to="/" className="flex flex-col">
               <span className="font-serif text-2xl font-bold tracking-[0.22em] text-[#641B32]">
                 TAANTIRA
               </span>
-              <span className="text-[10px] font-medium uppercase tracking-[0.28em] text-[#C39A52]">
-                Women&apos;s Heritage Couture
+              <span className="text-[10px] font-medium uppercase tracking-[0.24em] text-[#C39A52]">
+                Handloom Sarees &amp; Jewellery
               </span>
             </Link>
           </div>
@@ -149,7 +158,7 @@ export default function StorefrontLayout() {
                 }}
                 onFocus={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 180)}
-                placeholder="Search sarees, lehengas, Banarasi, Chanderi..."
+                placeholder="Search Banarasi, Kanjivaram, Paithani sarees & jewellery..."
                 className="w-full rounded-full border border-[#D9A0A9]/60 bg-white py-2 pl-10 pr-4 text-sm text-[#3D1023] placeholder-[#641B32]/50 focus:border-[#641B32] focus:outline-none"
               />
             </form>
@@ -199,18 +208,22 @@ export default function StorefrontLayout() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              to="/delivery"
-              className="hidden items-center gap-1 rounded-full border border-[#D9A0A9]/60 px-3 py-1.5 text-xs font-medium text-[#641B32] hover:bg-[#F5E7E8] xl:inline-flex"
-            >
-              <Truck className="h-3.5 w-3.5" /> {isPartner ? 'Partner Hub' : 'Deliver'}
-            </Link>
-            <Link
-              to="/admin"
-              className="hidden items-center gap-1 rounded-full border border-[#D9A0A9]/60 px-3 py-1.5 text-xs font-medium text-[#641B32] hover:bg-[#F5E7E8] xl:inline-flex"
-            >
-              <ShieldCheck className="h-3.5 w-3.5" /> {isAdmin ? 'Admin Portal' : 'Staff'}
-            </Link>
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="hidden rounded-full border border-[#D9A0A9]/60 px-3 py-1.5 text-xs font-medium text-[#641B32] hover:bg-[#F5E7E8] sm:inline-flex"
+              >
+                Admin Portal
+              </Link>
+            )}
+            {isPartner && (
+              <Link
+                to="/delivery"
+                className="hidden rounded-full border border-[#D9A0A9]/60 px-3 py-1.5 text-xs font-medium text-[#641B32] hover:bg-[#F5E7E8] sm:inline-flex"
+              >
+                Partner Hub
+              </Link>
+            )}
             <Link
               to="/account/wishlist"
               className="rounded-full p-2 text-[#641B32] transition hover:bg-[#F5E7E8]"
@@ -250,33 +263,32 @@ export default function StorefrontLayout() {
                 </button>
               </div>
             ) : (
-              <Link
-                to="/login"
-                className="rounded-full bg-[#641B32] px-4 py-1.5 text-xs font-semibold text-[#FFF9F2] transition hover:bg-[#3D1023]"
-              >
-                Sign In
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/login"
+                  className="rounded-full bg-[#641B32] px-4 py-1.5 text-xs font-semibold text-[#FFF9F2] transition hover:bg-[#3D1023]"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/register"
+                  className="hidden rounded-full border border-[#641B32]/40 px-4 py-1.5 text-xs font-semibold text-[#641B32] transition hover:bg-[#F5E7E8] sm:inline-flex"
+                >
+                  Register
+                </Link>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Category Navigation */}
-        <nav className="hidden border-t border-[#F5E7E8] bg-white/80 lg:block">
-          <div className="mx-auto flex max-w-7xl items-center justify-center gap-7 px-6 py-2.5 text-xs font-semibold uppercase tracking-widest text-[#3D1023]">
-            <Link to="/collections/new-arrivals" className="text-[#A83F5E] transition hover:text-[#641B32]">
-              New Arrivals
-            </Link>
-            {FALLBACK_CATEGORIES.map((cat) => (
-              <Link key={cat.slug} to={`/collections/${cat.slug}`} className="transition hover:text-[#641B32]">
-                {cat.name}
+        {/* Saree & Jewellery Category Navigation */}
+        <nav className="hidden border-t border-[#F5E7E8] bg-white/85 lg:block">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-6 px-6 py-2.5 text-[11px] font-semibold uppercase tracking-widest">
+            {STORE_NAV_LINKS.map((item) => (
+              <Link key={item.to} to={item.to} className={`transition hover:text-[#641B32] ${item.accent}`}>
+                {item.label}
               </Link>
             ))}
-            <Link to="/collections/festive-collections" className="text-[#C39A52] transition hover:text-[#641B32]">
-              Festive Edit
-            </Link>
-            <Link to="/collections/all" className="transition hover:text-[#641B32]">
-              Shop All
-            </Link>
           </div>
         </nav>
 
@@ -288,29 +300,26 @@ export default function StorefrontLayout() {
                 type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search sarees, kurtas, lehengas..."
+                placeholder="Search sarees & jewellery..."
                 className="w-full rounded-lg border border-[#D9A0A9] px-3 py-2 text-sm"
               />
             </form>
-            <div className="grid grid-cols-2 gap-2 text-sm font-medium">
-              {FALLBACK_CATEGORIES.map((cat) => (
+            <div className="grid grid-cols-2 gap-2 text-xs font-medium">
+              {STORE_NAV_LINKS.map((item) => (
                 <Link
-                  key={cat.slug}
-                  to={`/collections/${cat.slug}`}
+                  key={item.to}
+                  to={item.to}
                   onClick={() => setMobileMenuOpen(false)}
                   className="rounded-lg bg-[#FFF9F2] px-3 py-2 text-[#3D1023]"
                 >
-                  {cat.name}
+                  {item.label}
                 </Link>
               ))}
-              <Link to="/collections/festive-collections" onClick={() => setMobileMenuOpen(false)} className="rounded-lg bg-[#F5E7E8] px-3 py-2 text-[#641B32]">
-                Festive Edit
+              <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-lg bg-[#F5E7E8] px-3 py-2 text-[#641B32]">
+                Sign In
               </Link>
-              <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="rounded-lg bg-[#F5E7E8] px-3 py-2 text-[#641B32]">
-                Admin Portal
-              </Link>
-              <Link to="/delivery" onClick={() => setMobileMenuOpen(false)} className="rounded-lg bg-[#F5E7E8] px-3 py-2 text-[#641B32]">
-                Delivery Partner
+              <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="rounded-lg bg-[#F5E7E8] px-3 py-2 text-[#641B32]">
+                Create Account
               </Link>
             </div>
           </div>
@@ -328,41 +337,40 @@ export default function StorefrontLayout() {
           <div className="md:col-span-1">
             <h3 className="font-serif text-xl font-bold tracking-[0.2em] text-[#FFF9F2]">TAANTIRA</h3>
             <p className="mt-3 text-xs leading-relaxed text-[#F5E7E8]/80">
-              Handcrafted Indian women&apos;s luxury couture celebrating artisanal silk weaves, mindful tailoring, and timeless heirloom design.
+              Dedicated to Indian handloom sarees (90% curated weaves) paired with heirloom saree jewellery (10% curated capsule).
             </p>
-            <Link to="/" className="mt-4 inline-block text-xs text-[#C39A52] underline">
-              Back to Vite Starter (/)
-            </Link>
           </div>
 
           <div>
-            <h4 className="mb-3 text-xs font-semibold uppercase tracking-widest text-[#C39A52]">Collections</h4>
-            <ul className="space-y-2 text-xs text-[#F5E7E8]/85">
-              <li><Link to="/collections/sarees" className="hover:text-white">Banarasi &amp; Organza Sarees</Link></li>
-              <li><Link to="/collections/lehengas" className="hover:text-white">Bridal &amp; Festive Lehengas</Link></li>
-              <li><Link to="/collections/suits" className="hover:text-white">Anarkali &amp; Velvet Suits</Link></li>
-              <li><Link to="/collections/kurtas" className="hover:text-white">Chanderi Kurta Sets</Link></li>
-              <li><Link to="/collections/dresses" className="hover:text-white">Evening Silk Dresses</Link></li>
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-widest text-[#C39A52]">Sarees &amp; Jewellery</h4>
+            <ul className="flex flex-col gap-2 text-xs text-[#F5E7E8]/85">
+              <li><Link to="/collections/banarasi-sarees" className="hover:text-white">Banarasi Silk Sarees</Link></li>
+              <li><Link to="/collections/kanjivaram-sarees" className="hover:text-white">Kanjivaram Silk Sarees</Link></li>
+              <li><Link to="/collections/paithani-tussar-sarees" className="hover:text-white">Paithani &amp; Tussar Sarees</Link></li>
+              <li><Link to="/collections/organza-georgette-sarees" className="hover:text-white">Organza &amp; Georgette Sarees</Link></li>
+              <li><Link to="/collections/jamdani-handloom-sarees" className="hover:text-white">Jamdani &amp; Chanderi Sarees</Link></li>
+              <li><Link to="/collections/jewellery" className="text-[#C39A52] hover:text-white">Saree Jewellery Capsule</Link></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="mb-3 text-xs font-semibold uppercase tracking-widest text-[#C39A52]">Client Services</h4>
-            <ul className="space-y-2 text-xs text-[#F5E7E8]/85">
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-widest text-[#C39A52]">Client &amp; Partner Portals</h4>
+            <ul className="flex flex-col gap-2 text-xs text-[#F5E7E8]/85">
               <li><Link to="/account" className="hover:text-white">Customer Dashboard</Link></li>
-              <li><Link to="/account/orders" className="hover:text-white">Track Order &amp; OTP</Link></li>
+              <li><Link to="/account/orders" className="hover:text-white">Track Order &amp; Delivery OTP</Link></li>
               <li><Link to="/account/returns" className="hover:text-white">Returns &amp; Exchanges</Link></li>
               <li><Link to="/delivery" className="hover:text-white">Delivery Partner Portal</Link></li>
-              <li><Link to="/admin" className="hover:text-white">Staff &amp; Admin Portal</Link></li>
+              <li><Link to="/admin" className="hover:text-white">Admin &amp; Staff Portal</Link></li>
+              <li><Link to="/starter" className="text-[#D9A0A9] hover:text-white">Vite Starter Reference</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="mb-3 text-xs font-semibold uppercase tracking-widest text-[#C39A52]">Atelier Journal</h4>
             <p className="mb-3 text-xs text-[#F5E7E8]/80">
-              Receive private trunk-show invitations and seasonal weave releases.
+              Receive private weave previews and seasonal heirloom releases.
             </p>
-            <form onSubmit={handleSubmit(onNewsletterSubmit)} className="space-y-2">
+            <form onSubmit={handleSubmit(onNewsletterSubmit)} className="flex flex-col gap-2">
               <input
                 type="email"
                 {...register('email')}
@@ -382,7 +390,7 @@ export default function StorefrontLayout() {
           </div>
         </div>
         <div className="border-t border-[#641B32] px-6 py-4 text-center text-[11px] text-[#F5E7E8]/70">
-          &copy; {new Date().getFullYear()} Taantira Women&apos;s Fashion Atelier. Crafted in India.
+          &copy; {new Date().getFullYear()} Taantira Handloom Sarees &amp; Jewellery Atelier. Crafted in India.
         </div>
       </footer>
     </div>

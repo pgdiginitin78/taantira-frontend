@@ -161,7 +161,7 @@ export default function AdminDashboardPage() {
             label="From"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
+            slotProps={{ inputLabel: { shrink: true } }}
           />
           <TextField
             type="date"
@@ -169,7 +169,7 @@ export default function AdminDashboardPage() {
             label="To"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
+            slotProps={{ inputLabel: { shrink: true } }}
           />
           <Button
             size="small"

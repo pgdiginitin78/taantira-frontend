@@ -452,7 +452,7 @@ function ProductDetailContent({ slug }) {
             </div>
           )}
 
-          <form onSubmit={reviewForm.handleSubmit(onSubmitReview)} className="space-y-3 border-t border-[#F5E7E8] pt-4">
+          <form onSubmit={reviewForm.handleSubmit(onSubmitReview)} className="flex flex-col gap-3 border-t border-[#F5E7E8] pt-4">
             <p className="text-xs font-bold uppercase tracking-wider text-[#641B32]">Write a Review</p>
             <Controller
               name="rating"
@@ -511,7 +511,7 @@ function ProductDetailContent({ slug }) {
             </div>
           )}
 
-          <form onSubmit={questionForm.handleSubmit(onSubmitQuestion)} className="space-y-3 border-t border-[#F5E7E8] pt-4">
+          <form onSubmit={questionForm.handleSubmit(onSubmitQuestion)} className="flex flex-col gap-3 border-t border-[#F5E7E8] pt-4">
             <Controller
               name="question"
               control={questionForm.control}
