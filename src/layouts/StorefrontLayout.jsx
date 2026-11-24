@@ -13,26 +13,33 @@ import {
   LogOut,
   Sparkles,
   Camera,
+  ChevronDown,
 } from 'lucide-react';
 import api from '../services/api';
 import { useAuthStore } from '../store/useAuthStore';
 import { useCartStore } from '../store/useCartStore';
+import { MAIN_CATEGORIES } from '../data/sareeCatalogueData';
 import { FALLBACK_CATEGORIES, filterFallbackProducts } from '../utils/fallbackCatalog';
 
 const newsletterSchema = yup.object({
   email: yup.string().trim().lowercase().email('Enter a valid email address').required('Email is required'),
 });
 
+const SUBCATEGORIES_BY_MAIN = Object.fromEntries(
+  MAIN_CATEGORIES.map((m) => [m.slug, m.subcategories])
+);
+
 const STORE_NAV_LINKS = [
-  { to: '/collections/sarees', label: 'All Sarees', accent: 'text-[#641B32] font-bold' },
-  { to: '/collections/banarasi-sarees', label: 'Banarasi', accent: 'text-[#3D1023]' },
-  { to: '/collections/kanjivaram-sarees', label: 'Kanjivaram', accent: 'text-[#3D1023]' },
-  { to: '/collections/paithani-tussar-sarees', label: 'Paithani & Tussar', accent: 'text-[#3D1023]' },
-  { to: '/collections/organza-georgette-sarees', label: 'Organza & Georgette', accent: 'text-[#3D1023]' },
-  { to: '/collections/jamdani-chanderi-sarees', label: 'Jamdani & Chanderi', accent: 'text-[#3D1023]' },
-  { to: '/collections/nauvari-sarees', label: 'Nauvari / 9 Vaari', accent: 'text-[#641B32] font-semibold' },
-  { to: '/collections/regional-handloom-sarees', label: 'Regional Handloom', accent: 'text-[#3D1023]' },
-  { to: '/collections/jewellery', label: 'Saree Jewellery', accent: 'text-[#C39A52]' },
+  { to: '/collections/new-arrivals', label: 'NEW ARRIVALS', mainSlug: null },
+  { to: '/collections/sarees', label: 'ALL SAREES (90%)', mainSlug: null },
+  { to: '/collections/banarasi-sarees', label: 'BANARASI', mainSlug: 'banarasi-sarees' },
+  { to: '/collections/kanjivaram-sarees', label: 'KANJIVARAM', mainSlug: 'kanjivaram-sarees' },
+  { to: '/collections/paithani-tussar-sarees', label: 'PAITHANI & TUSSAR', mainSlug: 'paithani-tussar-sarees' },
+  { to: '/collections/organza-georgette-sarees', label: 'ORGANZA & GEORGETTE', mainSlug: 'organza-georgette-sarees' },
+  { to: '/collections/jamdani-chanderi-sarees', label: 'JAMDANI & CHANDERI', mainSlug: 'jamdani-chanderi-sarees' },
+  { to: '/collections/nauvari-sarees', label: 'NAUVARI (9 VAARI)', mainSlug: 'nauvari-sarees' },
+  { to: '/collections/jewellery', label: 'SAREE JEWELLERY', mainSlug: null },
+  { to: '/collections/festive-collections', label: 'FESTIVE EDIT', mainSlug: null },
 ];
 
 export default function StorefrontLayout() {
@@ -44,7 +51,7 @@ export default function StorefrontLayout() {
   const [suggestions, setSuggestions] = useState({ products: [], categories: [] });
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [promoText, setPromoText] = useState(
-    'Complimentary insured shipping on sarees above Rs 2,999 • Use code TAANTIRA10 for 10% welcome privilege'
+    'Complimentary insured shipping on orders above ₹ 2,999  |  Use code TAANTIRA10 for 10% welcome privilege'
   );
   const [newsletterMsg, setNewsletterMsg] = useState('');
 
@@ -120,40 +127,41 @@ export default function StorefrontLayout() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#FFF9F2] text-[#3D1023]">
-      {/* Promotional Bar */}
-      <div className="bg-[#3D1023] px-4 py-2 text-center text-xs font-medium tracking-wide text-[#FFF9F2]">
-        <span className="inline-flex items-center gap-1.5">
+      {/* Promotional Top Bar (Exact Reference Style) */}
+      <div className="bg-[#3D1023] px-4 py-2 text-center text-[11px] font-medium tracking-wide text-[#FFF9F2] sm:text-xs">
+        <span className="inline-flex flex-wrap items-center justify-center gap-2">
           <Sparkles className="h-3.5 w-3.5 text-[#C39A52]" />
-          {promoText}
+          <span>{promoText}</span>
+          <Sparkles className="h-3.5 w-3.5 text-[#C39A52]" />
         </span>
       </div>
 
-      {/* Main Header */}
-      <header className="sticky top-0 z-40 border-b border-[#D9A0A9]/40 bg-[#FFF9F2]/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:gap-4 sm:px-6 sm:py-3.5">
-          <div className="flex items-center gap-3">
+      {/* Main Sticky Header */}
+      <header className="sticky top-0 z-40 border-b border-[#D9A0A9]/35 bg-[#FFF9F2]/95 backdrop-blur">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-2 px-3 py-3 sm:gap-4 sm:px-6 sm:py-3.5">
+          <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={() => setMobileMenuOpen((o) => !o)}
-              className="rounded-lg p-2 text-[#641B32] hover:bg-[#F5E7E8] lg:hidden"
+              className="rounded-lg p-1.5 text-[#641B32] hover:bg-[#F5E7E8] lg:hidden"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
             <Link to="/" className="flex flex-col">
-              <span className="font-serif text-2xl font-bold tracking-[0.22em] text-[#641B32]">
+              <span className="font-serif text-xl font-bold tracking-[0.24em] text-[#641B32] sm:text-2xl">
                 TAANTIRA
               </span>
-              <span className="text-[10px] font-medium uppercase tracking-[0.24em] text-[#C39A52]">
+              <span className="text-[9px] font-medium uppercase tracking-[0.22em] text-[#A83F5E]/85 sm:text-[10px]">
                 Handloom Sarees &amp; Jewellery
               </span>
             </Link>
           </div>
 
-          {/* Live Search Bar with Suggestions */}
+          {/* Center Pill Search Input */}
           <div className="relative hidden max-w-md flex-1 md:block">
             <form onSubmit={onSearchSubmit} className="relative">
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#641B32]/60" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#641B32]/55" />
               <input
                 type="search"
                 value={searchQuery}
@@ -167,8 +175,8 @@ export default function StorefrontLayout() {
                 }}
                 onFocus={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowSuggestions(false), 180)}
-                placeholder="Search Banarasi, Kanjivaram, Nauvari sarees & fabrics..."
-                className="w-full rounded-full border border-[#D9A0A9]/60 bg-white py-2 pl-10 pr-4 text-sm text-[#3D1023] placeholder-[#641B32]/50 focus:border-[#641B32] focus:outline-none"
+                placeholder="Search Banarasi, Kanjivaram, Paithani, Sarees & Jewellery..."
+                className="w-full rounded-full border border-[#D9A0A9]/60 bg-white py-2 pl-10 pr-4 text-xs text-[#3D1023] placeholder-[#641B32]/50 focus:border-[#641B32] focus:outline-none sm:text-sm"
               />
             </form>
 
@@ -221,12 +229,12 @@ export default function StorefrontLayout() {
             )}
           </div>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          {/* Right Action Icons & Auth Pills */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {isAdmin && (
               <Link
                 to="/admin"
-                className="hidden rounded-full border border-[#D9A0A9]/60 px-3 py-1.5 text-xs font-medium text-[#641B32] hover:bg-[#F5E7E8] sm:inline-flex"
+                className="hidden whitespace-nowrap rounded-full border border-[#D9A0A9]/70 bg-white px-3 py-1.5 text-xs font-medium text-[#641B32] hover:bg-[#F5E7E8] sm:inline-flex"
               >
                 Admin Portal
               </Link>
@@ -234,7 +242,7 @@ export default function StorefrontLayout() {
             {isPartner && (
               <Link
                 to="/delivery"
-                className="hidden rounded-full border border-[#D9A0A9]/60 px-3 py-1.5 text-xs font-medium text-[#641B32] hover:bg-[#F5E7E8] sm:inline-flex"
+                className="hidden whitespace-nowrap rounded-full border border-[#D9A0A9]/70 bg-white px-3 py-1.5 text-xs font-medium text-[#641B32] hover:bg-[#F5E7E8] sm:inline-flex"
               >
                 Partner Hub
               </Link>
@@ -253,7 +261,7 @@ export default function StorefrontLayout() {
             >
               <ShoppingBag className="h-5 w-5" />
               {bagCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#641B32] text-[10px] font-bold text-[#FFF9F2]">
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#641B32] text-[10px] font-bold text-[#FFF9F2]">
                   {bagCount}
                 </span>
               )}
@@ -263,7 +271,7 @@ export default function StorefrontLayout() {
               <div className="flex items-center gap-1.5">
                 <Link
                   to="/account"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#641B32] px-3.5 py-1.5 text-xs font-semibold text-[#FFF9F2] hover:bg-[#3D1023]"
+                  className="inline-flex whitespace-nowrap items-center gap-1.5 rounded-full bg-[#641B32] px-3.5 py-1.5 text-xs font-semibold text-[#FFF9F2] hover:bg-[#3D1023]"
                 >
                   <User className="h-3.5 w-3.5" />
                   <span className="hidden sm:inline">{user.full_name?.split(' ')[0]}</span>
@@ -281,13 +289,13 @@ export default function StorefrontLayout() {
               <div className="flex items-center gap-2 shrink-0">
                 <Link
                   to="/login"
-                  className="whitespace-nowrap rounded-full bg-[#641B32] px-3 py-1.5 text-xs font-semibold text-[#FFF9F2] transition hover:bg-[#3D1023] sm:px-4"
+                  className="whitespace-nowrap rounded-full bg-[#641B32] px-3.5 py-1.5 text-xs font-semibold text-[#FFF9F2] transition hover:bg-[#3D1023] sm:px-4"
                 >
                   Sign In
                 </Link>
                 <Link
                   to="/register"
-                  className="hidden whitespace-nowrap rounded-full border border-[#641B32]/40 px-4 py-1.5 text-xs font-semibold text-[#641B32] transition hover:bg-[#F5E7E8] sm:inline-flex"
+                  className="hidden whitespace-nowrap rounded-full border border-[#D9A0A9] bg-white px-4 py-1.5 text-xs font-semibold text-[#641B32] transition hover:bg-[#F5E7E8] sm:inline-flex"
                 >
                   Register
                 </Link>
@@ -296,14 +304,42 @@ export default function StorefrontLayout() {
           </div>
         </div>
 
-        {/* Saree & Jewellery Category Navigation */}
-        <nav className="hidden border-t border-[#F5E7E8] bg-white/85 lg:block">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-6 px-6 py-2.5 text-[11px] font-semibold uppercase tracking-widest">
-            {STORE_NAV_LINKS.map((item) => (
-              <Link key={item.to} to={item.to} className={`transition hover:text-[#641B32] ${item.accent}`}>
-                {item.label}
-              </Link>
-            ))}
+        {/* Exact Reference Category Navigation Bar with Dropdowns */}
+        <nav className="hidden border-t border-[#D9A0A9]/25 bg-white lg:block">
+          <div className="mx-auto flex max-w-7xl items-center justify-center gap-5 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-[#3D1023] xl:gap-6">
+            {STORE_NAV_LINKS.map((item) => {
+              const subs = item.mainSlug ? SUBCATEGORIES_BY_MAIN[item.mainSlug] || [] : [];
+              return (
+                <div key={item.to} className="group relative">
+                  <Link
+                    to={item.to}
+                    className="inline-flex items-center gap-1 whitespace-nowrap py-0.5 text-[#3D1023] transition hover:text-[#641B32]"
+                  >
+                    <span>{item.label}</span>
+                    {subs.length > 0 && <ChevronDown className="h-3 w-3 text-[#641B32]/70" />}
+                  </Link>
+                  {subs.length > 0 && (
+                    <div className="invisible absolute left-0 top-full z-50 w-56 rounded-xl border border-[#D9A0A9]/40 bg-white py-2 opacity-0 shadow-xl transition group-hover:visible group-hover:opacity-100">
+                      <Link
+                        to={item.to}
+                        className="block border-b border-[#F5E7E8] px-4 py-2 text-[11px] font-bold text-[#641B32] hover:bg-[#FFF9F2]"
+                      >
+                        All {item.label}
+                      </Link>
+                      {subs.map((sub) => (
+                        <Link
+                          key={sub.slug}
+                          to={`/collections/${item.mainSlug}?subcategories=${encodeURIComponent(sub.slug)}`}
+                          className="block px-4 py-1.5 text-[11px] font-medium normal-case tracking-normal text-[#3D1023] hover:bg-[#FFF9F2] hover:text-[#641B32]"
+                        >
+                          {sub.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </nav>
 
@@ -330,11 +366,26 @@ export default function StorefrontLayout() {
                   {item.label}
                 </Link>
               ))}
-              <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="rounded-lg bg-[#F5E7E8] px-3 py-2 text-[#641B32]">
+              <Link
+                to="/collections/regional-handloom-sarees"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-lg bg-[#FFF9F2] px-3 py-2 text-[#3D1023]"
+              >
+                REGIONAL HANDLOOM
+              </Link>
+              <Link
+                to="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-lg bg-[#F5E7E8] px-3 py-2 text-[#641B32]"
+              >
                 Sign In
               </Link>
-              <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="rounded-lg bg-[#F5E7E8] px-3 py-2 text-[#641B32]">
-                Create Account
+              <Link
+                to="/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-lg bg-[#F5E7E8] px-3 py-2 text-[#641B32]"
+              >
+                Register
               </Link>
             </div>
           </div>
@@ -363,7 +414,8 @@ export default function StorefrontLayout() {
               <li><Link to="/collections/kanjivaram-sarees" className="hover:text-white">Kanjivaram Silk Sarees</Link></li>
               <li><Link to="/collections/paithani-tussar-sarees" className="hover:text-white">Paithani &amp; Tussar Sarees</Link></li>
               <li><Link to="/collections/organza-georgette-sarees" className="hover:text-white">Organza &amp; Georgette Sarees</Link></li>
-              <li><Link to="/collections/jamdani-handloom-sarees" className="hover:text-white">Jamdani &amp; Chanderi Sarees</Link></li>
+              <li><Link to="/collections/jamdani-chanderi-sarees" className="hover:text-white">Jamdani &amp; Chanderi Sarees</Link></li>
+              <li><Link to="/collections/nauvari-sarees" className="hover:text-white">Nauvari / 9 Vaari Sarees</Link></li>
               <li><Link to="/collections/jewellery" className="text-[#C39A52] hover:text-white">Saree Jewellery Capsule</Link></li>
             </ul>
           </div>
@@ -376,7 +428,6 @@ export default function StorefrontLayout() {
               <li><Link to="/account/returns" className="hover:text-white">Returns &amp; Exchanges</Link></li>
               <li><Link to="/delivery" className="hover:text-white">Delivery Partner Portal</Link></li>
               <li><Link to="/admin" className="hover:text-white">Admin &amp; Staff Portal</Link></li>
-              <li><Link to="/starter" className="text-[#D9A0A9] hover:text-white">Vite Starter Reference</Link></li>
             </ul>
           </div>
 

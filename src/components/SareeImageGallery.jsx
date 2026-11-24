@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Camera,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Heart,
   Maximize2,
   RotateCcw,
   Search,
+  Share2,
   X,
   ZoomIn,
   ZoomOut,
@@ -14,7 +17,12 @@ import { buildGalleryAngles } from '../utils/fallbackCatalog';
 
 const ZOOM_STEPS = [1, 1.5, 2, 2.5, 3];
 
-export default function SareeImageGallery({ product }) {
+export default function SareeImageGallery({
+  product,
+  wishlisted = false,
+  onToggleWishlist,
+  onShare,
+}) {
   const angles = product?.gallery_angles?.length ? product.gallery_angles : buildGalleryAngles(product);
   const availableCount = angles.filter((a) => a.status === 'available' && a.image_url).length;
   const firstAvailableIdx = Math.max(0, angles.findIndex((a) => a.status === 'available' && a.image_url));
@@ -73,7 +81,17 @@ export default function SareeImageGallery({ product }) {
     setHoverPoint(null);
   }, []);
 
-  // Keyboard navigation in fullscreen or gallery
+  const handleToggleZoom = useCallback(() => {
+    if (!hasImage) return;
+    setZoom((prev) => {
+      if (prev > 1) {
+        setPan({ x: 0.5, y: 0.5 });
+        return 1;
+      }
+      return 2;
+    });
+  }, [hasImage]);
+
   useEffect(() => {
     if (!fullscreenOpen) return undefined;
     const onKeyDown = (e) => {
@@ -93,7 +111,7 @@ export default function SareeImageGallery({ product }) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [fullscreenOpen, activeIndex, selectAngle, handleZoomIn, handleZoomOut]);
 
-  // Draw hover magnifier loupe into canvas (zero inline styles)
+  // Draw hover magnifier loupe into canvas
   useEffect(() => {
     const canvas = loupeCanvasRef.current;
     const img = imgRef.current;
@@ -117,7 +135,6 @@ export default function SareeImageGallery({ product }) {
     ctx.drawImage(img, sx, sy, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
   }, [hoverPoint, hasImage, zoom, activeAngle?.image_url]);
 
-  // Draw panned/zoomed view on main or fullscreen canvas when zoom > 1
   const drawZoomedCanvas = useCallback(
     (canvas) => {
       const img = imgRef.current;
@@ -229,11 +246,8 @@ export default function SareeImageGallery({ product }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col-reverse gap-3 sm:flex-row">
-        {/* Desktop Vertical Thumbnails / Mobile Horizontal Strip */}
-        <div
-          className="flex flex-row gap-2 overflow-x-auto pb-1 sm:w-16 sm:flex-col sm:overflow-visible sm:pb-0 lg:w-20"
-          aria-label="Saree viewing angles"
-        >
+        {/* Desktop Vertical 5-Angle Thumbnail Column + Down Chevron */}
+        <div className="flex flex-row items-center gap-2 overflow-x-auto pb-1 sm:w-16 sm:flex-col sm:overflow-visible sm:pb-0 lg:w-20">
           {angles.map((angle, idx) => {
             const isSelected = idx === activeIndex;
             const thumbAvailable = angle.status === 'available' && angle.image_url && !failedUrls[angle.image_url];
@@ -265,15 +279,20 @@ export default function SareeImageGallery({ product }) {
                     <span className="text-[8px] text-[#A83F5E]">Pending</span>
                   </div>
                 )}
-                <span className="absolute bottom-1 left-1 rounded bg-[#3D1023]/80 px-1.5 py-0.5 text-[9px] font-semibold text-[#FFF9F2]">
-                  {idx + 1}
-                </span>
               </button>
             );
           })}
+          <button
+            type="button"
+            onClick={() => selectAngle(activeIndex + 1)}
+            aria-label="Next saree angle thumbnail"
+            className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#D9A0A9]/60 bg-white text-[#641B32] shadow-sm hover:bg-[#F5E7E8] sm:inline-flex"
+          >
+            <ChevronDown className="h-4 w-4" />
+          </button>
         </div>
 
-        {/* Main Image / Magnifier Stage */}
+        {/* Main 3:4 Portrait Viewer matching reference icon & button overlays */}
         <div className="relative flex-1">
           <div
             data-testid="gallery-main-stage"
@@ -287,7 +306,7 @@ export default function SareeImageGallery({ product }) {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             onClick={handleViewerClick}
-            className={`relative aspect-[3/4] w-full select-none overflow-hidden rounded-2xl border border-[#D9A0A9]/50 bg-[#FFF9F2] shadow-sm ${
+            className={`relative aspect-[3/4] w-full select-none overflow-hidden rounded-2xl border border-[#D9A0A9]/45 bg-[#FFF9F2] shadow-sm ${
               hasImage && zoom > 1 ? 'cursor-grab active:cursor-grabbing' : hasImage ? 'cursor-zoom-in' : ''
             }`}
           >
@@ -330,12 +349,15 @@ export default function SareeImageGallery({ product }) {
                   {activeAngle?.desc}
                 </p>
                 <p className="mt-4 text-xs text-[#A83F5E]">
-                  {availableCount} of 5 photography angles captured for {product?.name}. We never repeat or reuse mismatched saree photos across slots.
+                  {availableCount} of 5 photography angles captured for {product?.name}.
                 </p>
                 {availableCount > 0 && activeIndex !== firstAvailableIdx && (
                   <button
                     type="button"
-                    onClick={() => selectAngle(firstAvailableIdx)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      selectAngle(firstAvailableIdx);
+                    }}
                     className="mt-4 rounded-full bg-[#641B32] px-4 py-2 text-xs font-semibold text-[#FFF9F2] transition hover:bg-[#3D1023]"
                   >
                     Return to Available View ({angles[firstAvailableIdx]?.label})
@@ -344,62 +366,46 @@ export default function SareeImageGallery({ product }) {
               </div>
             )}
 
-            {/* Angle Indicator Pill */}
-            <div className="pointer-events-none absolute left-3 top-3 rounded-full bg-[#3D1023]/85 px-3 py-1 text-xs font-medium text-[#FFF9F2]">
-              {activeIndex + 1} / {angles.length} · {activeAngle?.label}
-            </div>
-
-            {/* Top-Right Zoom & Fullscreen Toolbar */}
+            {/* Top-Right Vertical Icon Stack (Heart, Share, Expand) matching Image 1 */}
             <div
               onClick={(e) => e.stopPropagation()}
-              className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full border border-[#D9A0A9]/60 bg-white/95 p-1 shadow-sm"
+              className="absolute right-3 top-3 flex flex-col gap-2"
             >
-              {hasImage && (
-                <>
-                  <button
-                    type="button"
-                    onClick={handleZoomOut}
-                    disabled={zoom <= 1}
-                    aria-label="Zoom out"
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-[#641B32] transition hover:bg-[#F5E7E8] disabled:opacity-40"
-                  >
-                    <ZoomOut className="h-4 w-4" />
-                  </button>
-                  <span className="min-w-10 text-center text-[11px] font-semibold text-[#3D1023]">
-                    {Math.round(zoom * 100)}%
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleZoomIn}
-                    disabled={zoom >= 3}
-                    aria-label="Zoom in"
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-[#641B32] transition hover:bg-[#F5E7E8] disabled:opacity-40"
-                  >
-                    <ZoomIn className="h-4 w-4" />
-                  </button>
-                  {zoom > 1 && (
-                    <button
-                      type="button"
-                      onClick={handleResetZoom}
-                      aria-label="Reset zoom"
-                      className="flex h-7 items-center gap-1 rounded-full bg-[#F5E7E8] px-2 text-[11px] font-semibold text-[#641B32] hover:bg-[#D9A0A9]/40"
-                    >
-                      <RotateCcw className="h-3 w-3" /> Reset
-                    </button>
-                  )}
-                </>
+              {onToggleWishlist && (
+                <button
+                  type="button"
+                  onClick={onToggleWishlist}
+                  aria-label="Save to wishlist"
+                  className={`flex h-9 w-9 items-center justify-center rounded-full border shadow-md transition ${
+                    wishlisted
+                      ? 'border-[#641B32] bg-[#641B32] text-[#FFF9F2]'
+                      : 'border-[#D9A0A9]/50 bg-white/95 text-[#3D1023] hover:bg-[#F5E7E8]'
+                  }`}
+                >
+                  <Heart className="h-4 w-4" />
+                </button>
+              )}
+              {onShare && (
+                <button
+                  type="button"
+                  onClick={onShare}
+                  aria-label="Share saree link"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9A0A9]/50 bg-white/95 text-[#3D1023] shadow-md transition hover:bg-[#F5E7E8]"
+                >
+                  <Share2 className="h-4 w-4" />
+                </button>
               )}
               <button
                 type="button"
                 onClick={() => setFullscreenOpen(true)}
                 aria-label="Open fullscreen gallery"
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-[#641B32] text-[#FFF9F2] transition hover:bg-[#3D1023]"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9A0A9]/50 bg-white/95 text-[#3D1023] shadow-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
               >
-                <Maximize2 className="h-3.5 w-3.5" />
+                <Maximize2 className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Prev / Next Controls */}
+            {/* Left / Right Circular Navigation Arrows */}
             <button
               type="button"
               onClick={(e) => {
@@ -407,9 +413,9 @@ export default function SareeImageGallery({ product }) {
                 selectAngle(activeIndex - 1);
               }}
               aria-label="Previous angle"
-              className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#D9A0A9]/70 bg-white/95 text-[#641B32] shadow-sm transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
+              className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#3D1023] shadow-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-4 w-4" />
             </button>
             <button
               type="button"
@@ -418,37 +424,64 @@ export default function SareeImageGallery({ product }) {
                 selectAngle(activeIndex + 1);
               }}
               aria-label="Next angle"
-              className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#D9A0A9]/70 bg-white/95 text-[#641B32] shadow-sm transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
+              className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#3D1023] shadow-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-4 w-4" />
             </button>
 
-            {/* Hover Zari & Weave Loupe Window (Desktop) */}
+            {/* Bottom-Left Translucent Counter Pill (e.g. "1 / 5") matching Image 1 */}
+            <div className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-[#220713]/75 px-3 py-1 text-xs font-medium text-[#FFF9F2]">
+              {activeIndex + 1} / {angles.length}
+              {zoom > 1 ? ` · ${Math.round(zoom * 100)}%` : ''}
+            </div>
+
+            {/* Bottom-Right Vertical Zoom Stack (+, -, Search Toggle) matching Image 1 */}
+            {hasImage && (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="absolute bottom-3 right-3 flex flex-col gap-2"
+              >
+                <button
+                  type="button"
+                  onClick={handleZoomIn}
+                  disabled={zoom >= 3}
+                  aria-label="Zoom in"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9A0A9]/50 bg-white/95 text-[#3D1023] shadow-md transition hover:bg-[#F5E7E8] disabled:opacity-40"
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleZoomOut}
+                  disabled={zoom <= 1}
+                  aria-label="Zoom out"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9A0A9]/50 bg-white/95 text-[#3D1023] shadow-md transition hover:bg-[#F5E7E8] disabled:opacity-40"
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={zoom > 1 ? handleResetZoom : handleToggleZoom}
+                  aria-label={zoom > 1 ? 'Reset zoom' : 'Magnify weave detail'}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9A0A9]/50 bg-white/95 text-[#3D1023] shadow-md transition hover:bg-[#641B32] hover:text-[#FFF9F2]"
+                >
+                  {zoom > 1 ? <RotateCcw className="h-4 w-4" /> : <Search className="h-4 w-4" />}
+                </button>
+              </div>
+            )}
+
+            {/* Desktop Hover 2.8x Zari & Weave Loupe Window */}
             {hasImage && zoom === 1 && hoverPoint && (
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute bottom-3 right-3 hidden overflow-hidden rounded-2xl border-2 border-[#C39A52] bg-[#FFF9F2] shadow-xl lg:block"
+                className="pointer-events-none absolute bottom-14 left-3 hidden overflow-hidden rounded-2xl border-2 border-[#C39A52] bg-[#FFF9F2] shadow-xl lg:block"
               >
-                <canvas ref={loupeCanvasRef} width={180} height={180} className="block h-36 w-36" />
-                <div className="border-t border-[#D9A0A9]/40 bg-[#3D1023] px-2.5 py-1 text-center text-[10px] font-medium text-[#FFF9F2]">
-                  2.8x Zari & Weave Loupe
+                <canvas ref={loupeCanvasRef} width={160} height={160} className="block h-32 w-32" />
+                <div className="border-t border-[#D9A0A9]/40 bg-[#3D1023] px-2 py-0.5 text-center text-[10px] font-medium text-[#FFF9F2]">
+                  2.8x Zari Loupe
                 </div>
               </div>
             )}
-          </div>
-
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-[#641B32]/80">
-            <span className="inline-flex items-center gap-1.5">
-              <Search className="h-3.5 w-3.5 text-[#A83F5E]" />
-              {hasImage
-                ? zoom > 1
-                  ? 'Drag image to pan weave & zari details · Click Reset to exit zoom'
-                  : 'Hover for 2.8x weave loupe · Click image or + to zoom · Swipe or use arrows for 5 angles'
-                : `${availableCount}/5 photography angles uploaded`}
-            </span>
-            <span className="font-medium text-[#641B32]">
-              {availableCount}/5 Angles Complete
-            </span>
           </div>
         </div>
       </div>
@@ -521,7 +554,7 @@ export default function SareeImageGallery({ product }) {
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
-            className="relative mx-auto flex my-3 w-full max-w-4xl flex-1 items-center justify-center overflow-hidden"
+            className="relative mx-auto my-3 flex w-full max-w-4xl flex-1 items-center justify-center overflow-hidden"
           >
             <button
               type="button"
